@@ -70,3 +70,76 @@
         }
     }
 }
+
+.nav-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.cat-item {
+    position: relative;
+}
+
+/* vùng click/hover to hơn */
+.cat-label {
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background: #0d4c89;
+    color: #fff;
+}
+
+.cat-label:hover {
+    background: #0c3c6b;
+}
+
+/* submenu ẩn/hiện mượt mà và KHÔNG có gap */
+.submenu {
+    position: absolute;
+    top: 100%;
+    /* sát ngay dưới label */
+    left: 0;
+    z-index: 20;
+    min-width: 320px;
+    padding: 12px;
+    border-radius: 6px;
+    background: #fff;
+    color: #333;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    display: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .12s ease, transform .12s ease;
+    /* layout 2 cột */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+}
+
+/* CẦU NỐI (bridge) 10px để không rớt hover khi di xuống */
+.cat-item::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 10px;
+}
+
+/* Hover vào .cat-item (label hoặc submenu) đều giữ được */
+.cat-item:hover .submenu {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.submenu-item {
+    padding: 6px 4px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.submenu-item:hover {
+    color: #105aa2;
+}

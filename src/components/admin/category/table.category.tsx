@@ -9,6 +9,8 @@ import { dateRangeValidate } from '@/services/helper';
 import { deleteCategoryAPI, getCategoriesAPI, getCategoryAPI } from '@/services/api';
 import CreateCategory from './create.category';
 import UpdateCategory from './update.category';
+import CreateChildCategory from './create.childcategory';
+import UpdateChildCategory from './update.childcategory';
 
 
 
@@ -28,6 +30,11 @@ const TableCategory = () => {
         pages: 0,
         total: 0
     });
+
+    const [openModalCreateChild, setOpenModalCreateChild] = useState(false);
+    const [presetParent, setPresetParent] = useState<ICategory | null>(null);
+
+    const [openModalUpdateChild, setOpenModalUpdateChild] = useState(false);
 
     const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
     const [dataViewDetail, setDataViewDetail] = useState<ICategory | null>(null);
@@ -118,7 +125,38 @@ const TableCategory = () => {
                                 <DeleteTwoTone twoToneColor="#ff4d4f" />
                             </span>
                         </Popconfirm>
+                        
+                        <PlusOutlined
+                            title="Thêm thư mục con"
+                            style={{ color: '#52c41a', cursor: 'pointer', marginRight: 10 }}
+                            onClick={() => {
+                                setPresetParent(entity);
+                                setOpenModalCreateChild(true);
+                            }}
+                        />
 
+                        <EditTwoTone
+                            twoToneColor="#f57800"
+                            style={{ cursor: 'pointer', margin: '0 10px' }}
+                            onClick={() => {
+                                setDataUpdate(entity);
+                                setOpenModalUpdateChild(true);
+                            }}
+                        />
+
+                        <Popconfirm
+                            placement="leftTop"
+                            title="Xác nhận xóa Category"
+                            description="Bạn có chắc chắn muốn xóa Category này ?"
+                            onConfirm={() => handleDeleteCategory(entity._id)}
+                            okText="Xác nhận"
+                            cancelText="Hủy"
+                            okButtonProps={{ loading: isDeleteCategory }}
+                        >
+                            <span style={{ cursor: 'pointer' }}>
+                                <DeleteTwoTone twoToneColor="#ff4d4f" />
+                            </span>
+                        </Popconfirm>
 
                     </>
 
@@ -198,14 +236,22 @@ const TableCategory = () => {
                     ,
 
                     <Button
-                        key="button"
+                        key="add-parent"
                         icon={<PlusOutlined />}
                         onClick={() => {
                             setOpenModalCreate(true);
                         }}
                         type="primary"
                     >
-                        Add new
+                        Thêm thư mục cha
+                    </Button>
+                    ,
+                    <Button
+                        key="add-child"
+                        icon={<PlusOutlined />}
+                        onClick={() => { setPresetParent(null); setOpenModalCreateChild(true); }}
+                    >
+                        Thêm thư mục con
                     </Button>
                 ]}
             />
@@ -229,6 +275,20 @@ const TableCategory = () => {
                 refreshTable={refreshTable}
                 dataUpdate={dataUpdate}
                 setDataUpdate={setDataUpdate}
+            />
+
+            <CreateChildCategory
+                open={openModalCreateChild}
+                onClose={() => setOpenModalCreateChild(false)}
+                refreshTable={refreshTable}
+                presetParent={presetParent}
+            />
+
+            <UpdateChildCategory
+                open={openModalUpdateChild}
+                onClose={() => setOpenModalUpdateChild(false)}
+                refreshTable={refreshTable}
+                dataUpdate={dataUpdate}
             />
         </>
     )

@@ -1,5 +1,5 @@
 import MobileFilter from '@/components/client/product/mobile.filter';
-import { getProductsAPI, getCategoryAPI, getCategoriesParentAPI } from '@/services/api';
+import { getProductsAPI, getCategoryAPI, getCategoriesParentAPI, getCategoryChildrenAPI } from '@/services/api';
 import { FilterTwoTone, ReloadOutlined } from '@ant-design/icons';
 import {
     Row, Col, Form, Checkbox, Divider, InputNumber,
@@ -39,9 +39,14 @@ const HomePage = () => {
     const [sortQuery, setSortQuery] = useState<string>("sort=-sold");
     const [showMobileFilter, setShowMobileFilter] = useState<boolean>(false);
 
-    const [form] = Form.useForm();
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [includeDescendants, setIncludeDescendants] = useState<boolean>(false);
+
+    const [activeParentId, setActiveParentId] = useState<string | null>(null);
+    const [childrenByParent, setChildrenByParent] = useState<Record<string, ICategory[]>>({});
+
+    const [form] = Form.useForm();
+ 
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -65,6 +70,11 @@ const HomePage = () => {
     const fetchProduct = async () => {
         setIsLoading(true)
         let query = `current=${current}&pageSize=${pageSize}`;
+        if (selectedCategory) {
+            query += `&category=${selectedCategory}`;
+            if (includeDescendants) query += `&deep=true`;
+        }
+
         if (filter) {
             query += `&${filter}`;
         }
@@ -110,6 +120,30 @@ const HomePage = () => {
         }
 
     }
+
+    // hover cha -> nạp con (cache)
+    const handleHoverParent = async (parentId: string) => {
+        setActiveParentId(parentId);
+        if (!childrenByParent[parentId]) {
+            const res = await getCategoryChildrenAPI(parentId);
+            const arr = res?.data ?? [];
+            setChildrenByParent(prev => ({ ...prev, [parentId]: arr }));
+        }
+    };
+
+    // click CHA -> lấy cả con/cháu
+    const handleClickParent = (parentId: string) => {
+        setSelectedCategory(parentId);
+        setIncludeDescendants(true);
+        setCurrent(1);
+    };
+
+    // click CON -> chỉ lấy đúng con
+    const handleClickChild = (childId: string) => {
+        setSelectedCategory(childId);
+        setIncludeDescendants(false);
+        setCurrent(1);
+    };
 
     const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
         if (values?.range?.from >= 0 && values?.range?.to >= 0) {
@@ -196,31 +230,40 @@ const HomePage = () => {
                             fontWeight: 500,
                             fontSize: 14,
                         }}
+                        className="nav-cats"
+                        onMouseLeave={() => setActiveParentId(null)}
                     >
-                        {listCategory?.map((item) => (
-                            <span
+                        {listCategory.map((item) => (
+                            <div
                                 key={item.value}
-                                style={{
-                                    cursor: 'pointer',
-                                    padding: '4px 8px',
-                                    borderRadius: 4,
-                                    background: '#0d4c89',
-                                    transition: '0.2s',
-                                }}
-                                onClick={() => {
-                                    setSelectedCategory(item.value);   // id của danh mục cha
-                                    setIncludeDescendants(true);       // ✔ lấy cả con/cháu
-                                    setCurrent(1);
-                                }}
-                                onMouseEnter={(e) =>
-                                    ((e.target as HTMLSpanElement).style.backgroundColor = '#0c3c6b')
-                                }
-                                onMouseLeave={(e) =>
-                                    ((e.target as HTMLSpanElement).style.backgroundColor = '#0d4c89')
-                                }
+                                className="cat-item"
+                                onMouseEnter={() => handleHoverParent(item.value)}
                             >
-                                {item.label.toUpperCase()}
-                            </span>
+                                <span
+                                    className="cat-label"
+                                    onClick={() => handleClickParent(item.value)}
+                                >
+                                    {item.label.toUpperCase()}
+                                </span>
+
+                                {activeParentId === item.value && (
+                                    <div className="submenu">
+                                        {(childrenByParent[item.value] ?? []).map(child => (
+                                            <div
+                                                key={child._id}
+                                                className="submenu-item"
+                                                onClick={() => handleClickChild(child._id)}
+                                            >
+                                                {child.name}
+                                            </div>
+                                        ))}
+                                        {(!childrenByParent[item.value] ||
+                                            childrenByParent[item.value]?.length === 0) && (
+                                                <div className="submenu-empty">Không có danh mục con</div>
+                                            )}
+                                    </div>
+                                )}
+                            </div>
                         ))}
                     </div>
 

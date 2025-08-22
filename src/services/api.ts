@@ -72,6 +72,23 @@ export const getProductsAPI = (query: string) => {
     )
 }
 
+// categories
+export const getCategoryChildrenAPI = (id: string) => {
+    const urlBackend = `/api/v1/category/${id}/children`;
+    return axios.get<IBackendRes<ICategory[]>>(urlBackend);
+};
+
+// ✅ Tạo **thư mục con** (bắt buộc chọn parent)
+export const createChildCategoryAPI = (name: string, parentId: string, slug:string) => {
+    const urlBackend = "/api/v1/category";
+    return axios.post<IBackendRes<IRegister>>(urlBackend, { name, parentId, slug });
+};
+
+// (Khuyến nghị) Cho phép update kèm đổi parent nếu cần
+export const updateChildCategoryAPI = (_id: string, name: string, parentId?: string | null) => {
+    const urlBackend = `/api/v1/category/${_id}`;
+    return axios.patch<IBackendRes<IRegister>>(urlBackend, { name, parentId });
+};
 
 export const getCategoriesParentAPI = () => {
     const urlBackend = `/api/v1/category/roots`;
@@ -101,11 +118,11 @@ export const getCategoryAPI = () => {
 }
 
 export const createCategoryAPI = (
-    name: string
+    name: string, slug: string,
 ) => {
     const urlBackend = "/api/v1/category";
     return axios.post<IBackendRes<IRegister>>(urlBackend,
-        { name})
+        { name, slug})
 }
 
 export const updateCategoryAPI = (
@@ -176,6 +193,18 @@ export const getProductByIdAPI = (id: string) => {
         }
     )
 }
+
+// ✅ Gọi sản phẩm theo **danh mục CHA** và **gom cả con/cháu** (deep=true)
+export const getProductsByParentDeepAPI = (
+    parentId: string,
+    current = 1,
+    pageSize = 20,
+    extraQuery = "" // ví dụ: "sort=-sold&price>=1000000"
+) => {
+    const q = `category=${parentId}&deep=true&current=${current}&pageSize=${pageSize}${extraQuery ? `&${extraQuery}` : ""}`;
+    const urlBackend = `/api/v1/Product?${q}`;
+    return axios.get<IBackendRes<IModelPaginate<IProductTable>>>(urlBackend, { headers: { delay: 100 } });
+};
 
 export const createOrderAPI = (
     name: string, address: string,
