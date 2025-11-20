@@ -1,10 +1,23 @@
 import MobileFilter from '@/components/client/product/mobile.filter';
-import { getProductsAPI, getCategoryAPI, getCategoriesParentAPI, getCategoryChildrenAPI } from '@/services/api';
-import { FilterTwoTone, ReloadOutlined } from '@ant-design/icons';
 import {
-    Row, Col, Form, Checkbox, Divider, InputNumber,
-    Button, Rate, Tabs, Pagination, Spin,
-    Input
+    getProductsAPI,
+    getCategoriesParentAPI,
+    getCategoryChildrenAPI,
+    getProductsByParentDeepAPI,
+} from '@/services/api';
+import {
+    FilterTwoTone,
+    ReloadOutlined,
+    AppstoreOutlined,
+    CustomerServiceOutlined,
+    ReadOutlined,
+    GiftOutlined,
+    ProjectOutlined,
+    SoundOutlined,
+} from '@ant-design/icons';
+import {
+    Row, Col, Form, Divider, InputNumber,
+    Button, Rate, Tabs, Pagination, Spin, Input
 } from 'antd';
 import type { FormProps } from 'antd';
 import { useEffect, useState } from 'react';
@@ -13,22 +26,19 @@ import 'styles/home.scss';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-type FieldType = {
-    range: {
-        from: number;
-        to: number
-    }
-    category: string[]
-};
 
+type FieldType = { range: { from: number; to: number }; category: string[] };
 
 const HomePage = () => {
     const [searchTerm] = useOutletContext() as any;
 
-    const [listCategory, setListCategory] = useState<{
-        label: string, value: string
-    }[]>([]);
+    // ===== CATEGORIES =====
+    const [listCategory, setListCategory] = useState<{ label: string, value: string }[]>([]);
+    const [activeParentId, setActiveParentId] = useState<string | null>(null);
+    const [childrenByParent, setChildrenByParent] = useState<Record<string, ICategory[]>>({});
+    const [hoveringMenu, setHoveringMenu] = useState(false);
 
+    // ===== PRODUCT LIST =====
     const [listProduct, setListProduct] = useState<IProductTable[]>([]);
     const [current, setCurrent] = useState<number>(1);
     const [pageSize, setPageSize] = useState<number>(10);
@@ -42,88 +52,107 @@ const HomePage = () => {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [includeDescendants, setIncludeDescendants] = useState<boolean>(false);
 
-    const [activeParentId, setActiveParentId] = useState<string | null>(null);
-    const [childrenByParent, setChildrenByParent] = useState<Record<string, ICategory[]>>({});
+    // ===== HOME SECTIONS =====
+    const [sectionLoading, setSectionLoading] = useState<boolean>(false);
+    const [parentProducts, setParentProducts] = useState<Record<string, IProductTable[]>>({});
 
     const [form] = Form.useForm();
- 
     const navigate = useNavigate();
 
+    // ---------- INIT ROOT CATEGORIES ----------
     useEffect(() => {
         const initCategory = async () => {
             const res = await getCategoriesParentAPI();
             if (res && res.data) {
-                const d = res.data.map(item => {
-                    return { label: item.name, value: item._id }
-                })
+                const d = res.data.map(item => ({ label: item.name, value: item._id }));
                 setListCategory(d);
+                preloadSections(d);
             }
-        }
+        };
         initCategory();
     }, []);
 
-    console.log("listCategory", listCategory);
+    // ====== LẮNG NGHE SỰ KIỆN TỪ HEADER ======
     useEffect(() => {
-        fetchProduct();
-    }, [current, pageSize, filter, sortQuery, searchTerm]);
+        const handleFilter = (e: any) => {
+            const { id, deep } = e.detail;
+            setSelectedCategory(id);
+            setIncludeDescendants(deep);
+            setCurrent(1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        window.addEventListener('filterCategory', handleFilter);
+        return () => window.removeEventListener('filterCategory', handleFilter);
+    }, []);
+
+
+    // ---------- PRELOAD SECTIONS ----------
+    const preloadSections = async (parents: { label: string; value: string }[]) => {
+        setSectionLoading(true);
+        try {
+            const entries = await Promise.all(
+                parents.map(async (p) => {
+                    const res = await getProductsByParentDeepAPI(p.value, 1, 8, "sort=-sold");
+                    const items = res?.data?.result ?? [];
+                    return [p.value, items] as const;
+                })
+            );
+            setParentProducts(Object.fromEntries(entries));
+        } finally {
+            setSectionLoading(false);
+        }
+    };
+
+    // ---------- FETCH PRODUCT ----------
+    useEffect(() => {
+        if (selectedCategory || filter || searchTerm) {
+            fetchProduct();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [current, pageSize, filter, sortQuery, searchTerm, selectedCategory, includeDescendants]);
 
     const fetchProduct = async () => {
-        setIsLoading(true)
+        setIsLoading(true);
         let query = `current=${current}&pageSize=${pageSize}`;
         if (selectedCategory) {
             query += `&category=${selectedCategory}`;
             if (includeDescendants) query += `&deep=true`;
         }
-
-        if (filter) {
-            query += `&${filter}`;
-        }
-        if (sortQuery) {
-            query += `&${sortQuery}`;
-        }
-
-        if (searchTerm) {
-            query += `&mainText=/${searchTerm}/i`;
-        }
+        if (filter) query += `&${filter}`;
+        if (sortQuery) query += `&${sortQuery}`;
+        if (searchTerm) query += `&mainText=/${searchTerm}/i`;
+        
 
         const res = await getProductsAPI(query);
         if (res && res.data) {
             setListProduct(res.data.result);
-            setTotal(res.data.meta.total)
+            setTotal(res.data.meta.total);
         }
-        setIsLoading(false)
-    }
+        setIsLoading(false);
+    };
 
     const handleOnchangePage = (pagination: { current: number, pageSize: number }) => {
-        if (pagination && pagination.current !== current) {
-            setCurrent(pagination.current)
-        }
-        if (pagination && pagination.pageSize !== pageSize) {
-            setPageSize(pagination.pageSize)
-            setCurrent(1);
-        }
+        if (pagination?.current !== current) setCurrent(pagination.current);
+        if (pagination?.pageSize !== pageSize) { setPageSize(pagination.pageSize); setCurrent(1); }
+    };
 
-    }
+    // ---------- ICON GUESS ----------
+    const guessIcon = (name: string) => {
+        const n = name.toLowerCase();
+        if (n.includes("guitar")) return <SoundOutlined />;
+        if (n.includes("piano")) return <AppstoreOutlined />;
+        if (n.includes("organ")) return <AppstoreOutlined />;
+        if (n.includes("violin")) return <SoundOutlined />;
+        if (n.includes("loa") || n.includes("tai nghe")) return <CustomerServiceOutlined />;
+        if (n.includes("tin") || n.includes("news")) return <ReadOutlined />;
+        if (n.includes("khuyến") || n.includes("sale")) return <GiftOutlined />;
+        if (n.includes("dự án")) return <ProjectOutlined />;
+        return <AppstoreOutlined />;
+    };
 
-
-    const handleChangeFilter = (changedValues: any, values: any) => {
-        //only fire if category changes
-        if (changedValues.category) {
-            const cate = values.category;
-            if (cate && cate.length > 0) {
-                const f = cate.join(',');
-                setFilter(`category=${f}`)
-            } else {
-                //reset data -> fetch all
-                setFilter('');
-            }
-        }
-
-    }
-
-    // hover cha -> nạp con (cache)
     const handleHoverParent = async (parentId: string) => {
         setActiveParentId(parentId);
+        setHoveringMenu(true);
         if (!childrenByParent[parentId]) {
             const res = await getCategoryChildrenAPI(parentId);
             const arr = res?.data ?? [];
@@ -131,336 +160,181 @@ const HomePage = () => {
         }
     };
 
-    // click CHA -> lấy cả con/cháu
     const handleClickParent = (parentId: string) => {
         setSelectedCategory(parentId);
         setIncludeDescendants(true);
         setCurrent(1);
     };
 
-    // click CON -> chỉ lấy đúng con
     const handleClickChild = (childId: string) => {
         setSelectedCategory(childId);
         setIncludeDescendants(false);
         setCurrent(1);
     };
 
-    const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
-        if (values?.range?.from >= 0 && values?.range?.to >= 0) {
-            let f = `price>=${values?.range?.from}&price<=${values?.range?.to}`;
-            if (values?.category?.length) {
-                const cate = values?.category?.join(',');
-                f += `&category=${cate}`
-            }
-            setFilter(f);
-        }
-
-    }
-
-    const onChange = (key: string) => {
-        // console.log(key);
-    };
-
     const items = [
-        {
-            key: "sort=-sold",
-            label: `Phổ biến`,
-            children: <></>,
-        },
-        {
-            key: 'sort=-updatedAt',
-            label: `Hàng Mới`,
-            children: <></>,
-        },
-        {
-            key: 'sort=price',
-            label: `Giá Thấp Đến Cao`,
-            children: <></>,
-        },
-        {
-            key: 'sort=-price',
-            label: `Giá Cao Đến Thấp`,
-            children: <></>,
-        },
-    ];
-    
-    // banner
-    const ProductList = [
-        { title: "Chí Phèo", img: "/banner/baner1.jpg" },
-        { title: "Tuyển tập Nam Cao", img: "/banner/baner2.jpg" },
-        { title: "Lão Hạc", img: "/banner/baner3.png" },
-        { title: "Thạch Lam", img: "/banner/baner4.png" },
-        { title: "Vũ Trọng Phụng", img: "/banner/baner5.png" },
-        { title: "Những ngày xưa", img: "/banner/baner6.png" },
+        { key: "sort=-sold", label: `Phổ biến`, children: <></> },
+        { key: 'sort=-updatedAt', label: `Hàng Mới`, children: <></> },
+        { key: 'sort=price', label: `Giá Thấp Đến Cao`, children: <></> },
+        { key: 'sort=-price', label: `Giá Cao Đến Thấp`, children: <></> },
     ];
 
-    const settings = {
-        dots: false,
+    const ProductCard = (item: IProductTable) => (
+        <div onClick={() => navigate(`/Product/${item._id}`)} className="column" key={item._id}>
+            <div className='wrapper'>
+                <div className='thumbnail'>
+                    <img src={`${import.meta.env.VITE_BACKEND_URL}/images/Product/${item.thumbnail}`} alt="thumbnail Product" />
+                </div>
+                <div className='text' title={item.name}>{item.name}</div>
+                <div className='price'>
+                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item?.price ?? 0)}
+                </div>
+                <div className='rating'>
+                    <Rate value={5} disabled style={{ color: '#ffce3d', fontSize: 10 }} />
+                    <span>Đã bán {item?.sold ?? 0}</span>
+                </div>
+            </div>
+        </div>
+    );
+
+    // ===== BANNER SETTINGS =====
+    const bannerSettings = {
         infinite: true,
-        speed: 4000,
         autoplay: true,
-        autoplaySpeed: 0,
-        cssEase: "linear",
-        slidesToShow: 5,
+        autoplaySpeed: 2000,
+        speed: 3000,
+        slidesToShow: 1,
         slidesToScroll: 1,
         arrows: false,
+        pauseOnHover: false,
+        cssEase: "linear",
     };
 
     return (
-        <>
-            <div style={{ background: '#105aa2', padding: '10px 20px' }}>
-                <div
-                    style={{
-                        maxWidth: 1440,
-                        margin: '0 auto',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: '10px',
-                    }}
-                >
-                    {/* Danh mục sản phẩm */}
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '15px',
-                            color: '#fff',
-                            fontWeight: 500,
-                            fontSize: 14,
-                        }}
-                        className="nav-cats"
-                        onMouseLeave={() => setActiveParentId(null)}
-                    >
-                        {listCategory.map((item) => (
+        <div className="main-layout">
+            {/* ==== SIDEBAR ==== */}
+            <aside className="sidebar" onMouseLeave={() => setHoveringMenu(false)}>
+                <div className="sidebar-inner">
+                    {/* <h3>Danh mục sản phẩm</h3> */}
+                    {listCategory.map((item) => (
+                        <div
+                            key={item.value}
+                            className={`sidebar-item ${activeParentId === item.value ? 'active' : ''}`}
+                            onMouseEnter={() => handleHoverParent(item.value)}
+                            onClick={() => handleClickParent(item.value)}
+                        >
+                            {guessIcon(item.label)}
+                            <span>{item.label}</span>
+
+                            {/* --- NHÉT con VÀO ĐÂY --- */}
+                            {hoveringMenu && activeParentId === item.value && (
+                                <div className="sidebar-children">
+                                    {(childrenByParent[item.value] ?? []).map(child => (
+                                        <div
+                                            key={child._id}
+                                            className="sidebar-child"
+                                            onClick={(e) => { e.stopPropagation(); handleClickChild(child._id); }}
+                                        >
+                                            {child.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+
+                </div>
+            </aside>
+
+            {/* ==== MAIN CONTENT ==== */}
+            <main className="main-content">
+                {/* ===== BANNER ===== */}
+                <div className="banner-container">
+                    <Slider
+                        dots={true}
+                        infinite={true}
+                        speed={600}
+                        slidesToShow={1}
+                        slidesToScroll={1}
+                        arrows={false}
+                        autoplay={true}       // ✅ bật auto
+                        autoplaySpeed={3000}  // ✅ 3 giây chuyển 1 lần
+                        pauseOnHover={true}   // dừng khi người dùng rê chuột
+                        appendDots={(dots) => (
                             <div
-                                key={item.value}
-                                className="cat-item"
-                                onMouseEnter={() => handleHoverParent(item.value)}
+                                style={{
+                                    position: "absolute",
+                                    bottom: "15px",
+                                    width: "100%",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                }}
                             >
-                                <span
-                                    className="cat-label"
-                                    onClick={() => handleClickParent(item.value)}
-                                >
-                                    {item.label.toUpperCase()}
-                                </span>
-
-                                {activeParentId === item.value && (
-                                    <div className="submenu">
-                                        {(childrenByParent[item.value] ?? []).map(child => (
-                                            <div
-                                                key={child._id}
-                                                className="submenu-item"
-                                                onClick={() => handleClickChild(child._id)}
-                                            >
-                                                {child.name}
-                                            </div>
-                                        ))}
-                                        {(!childrenByParent[item.value] ||
-                                            childrenByParent[item.value]?.length === 0) && (
-                                                <div className="submenu-empty">Không có danh mục con</div>
-                                            )}
-                                    </div>
-                                )}
+                                <ul style={{ margin: "0px" }}> {dots} </ul>
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Ô tìm kiếm */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Input.Search
-                            placeholder="Tìm sản phẩm..."
-                            allowClear
-                            enterButton
-                            onSearch={(value) => {
-                                if (value) {
-                                    setCurrent(1);
-                                    setFilter(`mainText=/${value}/i`);
-                                } else {
-                                    setFilter('');
-                                }
-                            }}
-                        />
-                    </div>
+                        )}
+                    >
+                        <div><img src="/banner/baner1.png" alt="banner1" /></div>
+                        <div><img src="/banner/baner2.jpg" alt="banner2" /></div>
+                        <div><img src="/banner/baner3.jpg" alt="banner3" /></div>
+                    </Slider>
                 </div>
-            </div>
 
 
-            <div style={{ background: '#efefef', padding: "20px 0" }}>
-                <div className="homepage-container" style={{ maxWidth: 1440, margin: '0 auto', overflow: "hidden" }}>
-                    <Row gutter={[20, 20]}>
-                        <Col md={4} sm={0} xs={0}>
-                            <div style={{ padding: "20px", background: '#fff', borderRadius: 5 }}>
-                                <div style={{ display: 'flex', justifyContent: "space-between" }}>
-                                    <span> <FilterTwoTone />
-                                        <span style={{ fontWeight: 500 }}> Bộ lọc tìm kiếm</span>
-                                    </span>
-                                    <ReloadOutlined title="Reset" onClick={() => {
-                                        form.resetFields();
-                                        setFilter('');
-                                    }}
-                                    />
-                                </div>
-                                <Divider />
-                                <Form
-                                    onFinish={onFinish}
-                                    form={form}
-                                    onValuesChange={(changedValues, values) => handleChangeFilter(changedValues, values)}
-                                >
-                                    {/* <Form.Item
-                                        name="category"
-                                        label="Danh mục sản phẩm"
-                                        labelCol={{ span: 24 }}
-                                    >
-                                        <Checkbox.Group>
-                                            <Row>
-                                                {listCategory?.map((item, index) => {
-                                                    return (
-                                                        <Col span={24} key={`index-${index}`} style={{ padding: '7px 0' }}>
-                                                            <Checkbox value={item.value} >
-                                                                {item.label}
-                                                            </Checkbox>
-                                                        </Col>
-                                                    )
-                                                })}
-                                            </Row>
-                                        </Checkbox.Group>
-                                    </Form.Item> */}
-                                    {/* <Divider /> */}
-                                    <Form.Item
-                                        label="Khoảng giá"
-                                        labelCol={{ span: 24 }}
-                                    >
-                                        <Row gutter={[10, 10]} style={{ width: "100%" }}>
-                                            <Col xl={11} md={24}>
-                                                <Form.Item name={["range", 'from']}>
-                                                    <InputNumber
-                                                        name='from'
-                                                        min={0}
-                                                        placeholder="đ TỪ"
-                                                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                                        style={{ width: '100%' }}
-                                                    />
-                                                </Form.Item>
-                                            </Col>
-                                            <Col xl={2} md={0}>
-                                                <div > - </div>
-                                            </Col>
-                                            <Col xl={11} md={24}>
-                                                <Form.Item name={["range", 'to']}>
-                                                    <InputNumber
-                                                        name='to'
-                                                        min={0}
-                                                        placeholder="đ ĐẾN"
-                                                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                                        style={{ width: '100%' }}
-                                                    />
-                                                </Form.Item>
-                                            </Col>
-                                        </Row>
-                                        <div>
-                                            <Button onClick={() => form.submit()}
-                                                style={{ width: "100%" }} type='primary'>Áp dụng</Button>
-                                        </div>
-                                    </Form.Item>
-                                    <Divider />
-                                    <Form.Item
-                                        label="Đánh giá"
-                                        labelCol={{ span: 24 }}
-                                    >
-                                        <div>
-                                            <Rate value={5} disabled style={{ color: '#ffce3d', fontSize: 15 }} />
-                                            <span className="ant-rate-text"></span>
-                                        </div>
-                                        <div>
-                                            <Rate value={4} disabled style={{ color: '#ffce3d', fontSize: 15 }} />
-                                            <span className="ant-rate-text">trở lên</span>
-                                        </div>
-                                        <div>
-                                            <Rate value={3} disabled style={{ color: '#ffce3d', fontSize: 15 }} />
-                                            <span className="ant-rate-text">trở lên</span>
-                                        </div>
-                                        <div>
-                                            <Rate value={2} disabled style={{ color: '#ffce3d', fontSize: 15 }} />
-                                            <span className="ant-rate-text">trở lên</span>
-                                        </div>
-                                        <div>
-                                            <Rate value={1} disabled style={{ color: '#ffce3d', fontSize: 15 }} />
-                                            <span className="ant-rate-text">trở lên</span>
-                                        </div>
-                                    </Form.Item>
-                                </Form>
-                            </div>
-                        </Col>
-
-                        <Col md={20} xs={24} >
-                            <Spin spinning={isLoading} tip="Loading...">
-                                <div style={{ padding: "20px", background: '#fff', borderRadius: 5 }}>
-                                    <Row >
-                                        <Tabs
-                                            defaultActiveKey="sort=-sold"
-                                            items={items}
-                                            onChange={(value) => { setSortQuery(value) }}
-                                            style={{ overflowX: "auto" }}
-                                        />
-                                        <Col xs={24} md={0}>
-                                            <div style={{ marginBottom: 20 }} >
-                                                <span onClick={() => setShowMobileFilter(true)}>
-                                                    <FilterTwoTone />
-                                                    <span style={{ fontWeight: 500 }}> Lọc</span>
-                                                </span>
-                                            </div>
-                                        </Col>
-                                    </Row>
-                                    <Row className='customize-row'>
-                                        {listProduct?.map((item, index) => {
-                                            return (
-                                                <div
-                                                    onClick={() => navigate(`/Product/${item._id}`)}
-                                                    className="column" key={`Product-${index}`}>
-                                                    <div className='wrapper'>
-                                                        <div className='thumbnail'>
-                                                            <img src={`${import.meta.env.VITE_BACKEND_URL}/images/Product/${item.thumbnail}`} alt="thumbnail Product" />
+                {/* ===== PRODUCT SECTIONS ===== */}
+                <div style={{ background: '#efefef', padding: "20px 0" }}>
+                    <div className="homepage-container" style={{ maxWidth: 1440, margin: '0 auto' }}>
+                        <Row gutter={[20, 20]}>
+                            <Col md={24} xs={24}>
+                                {(!selectedCategory && !filter && !searchTerm) ? (
+                                    <Spin spinning={sectionLoading} tip="Loading...">
+                                        <div style={{ display: 'grid', gap: 24 }}>
+                                            {listCategory.map((cat) => {
+                                                const items = parentProducts[cat.value] || [];
+                                                if (items.length === 0) return null;
+                                                return (
+                                                    <div key={cat.value} style={{ padding: "16px", background: '#fff', borderRadius: 6 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
+                                                            <h3 style={{ margin: 0, fontWeight: 700 }}>{cat.label.toUpperCase()}</h3>
+                                                            <Button type="link" onClick={() => handleClickParent(cat.value)}>Xem tất cả</Button>
                                                         </div>
-                                                        <div className='text' title={item.mainText}>{item.mainText}</div>
-                                                        <div className='price'>
-                                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item?.price ?? 0)}
-                                                        </div>
-                                                        <div className='rating'>
-                                                            <Rate value={5} disabled style={{ color: '#ffce3d', fontSize: 10 }} />
-                                                            <span>Đã bán {item?.sold ?? 0}</span>
-                                                        </div>
+                                                        <Row className='customize-row'>
+                                                            {items.map((item) => ProductCard(item))}
+                                                        </Row>
                                                     </div>
-                                                </div>
-                                            )
-                                        })}
-                                    </Row>
-                                    <div style={{ marginTop: 30 }}></div>
-                                    <Row style={{ display: "flex", justifyContent: "center" }}>
-                                        <Pagination
-                                            current={current}
-                                            total={total}
-                                            pageSize={pageSize}
-                                            responsive
-                                            onChange={(p, s) => handleOnchangePage({ current: p, pageSize: s })}
-                                        />
-                                    </Row>
-                                </div>
-                            </Spin>
-                        </Col>
-                    </Row>
+                                                );
+                                            })}
+                                        </div>
+                                    </Spin>
+                                ) : (
+                                    <Spin spinning={isLoading} tip="Loading...">
+                                        <div style={{ padding: "20px", background: '#fff', borderRadius: 5 }}>
+                                            <Row >
+                                                <Tabs
+                                                    defaultActiveKey="sort=-sold"
+                                                    items={items}
+                                                    onChange={(value) => { setSortQuery(value); setCurrent(1); }}
+                                                    style={{ overflowX: "auto" }}
+                                                />
+                                            </Row>
+                                            <Row className='customize-row'>
+                                                {listProduct?.map((item) => ProductCard(item))}
+                                            </Row>
+                                            <div style={{ marginTop: 30 }}></div>
+                                            <Row style={{ display: "flex", justifyContent: "center" }}>
+                                                <Pagination current={current} total={total} pageSize={pageSize} responsive
+                                                    onChange={(p, s) => handleOnchangePage({ current: p, pageSize: s })} />
+                                            </Row>
+                                        </div>
+                                    </Spin>
+                                )}
+                            </Col>
+                        </Row>
+                    </div>
                 </div>
-            </div>
-            <MobileFilter
-                isOpen={showMobileFilter}
-                setIsOpen={setShowMobileFilter}
-                handleChangeFilter={handleChangeFilter}
-                listCategory={listCategory}
-                onFinish={onFinish}
-            />
-        </>
-    )
-}
+            </main>
+        </div>
+    );
+};
 
 export default HomePage;

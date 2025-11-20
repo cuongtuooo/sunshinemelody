@@ -20,6 +20,7 @@ type TSearch = {
     updatedAt: string;
     updatedAtRange: string;
     price: number;
+    quantity: number;
 }
 const TableProduct = () => {
 
@@ -84,14 +85,19 @@ const TableProduct = () => {
             dataIndex: 'name',
             sorter: true
         },
+        // {
+        //     title: 'Nội dung sản phẩm',
+        //     dataIndex: 'mainText',
+        //     sorter: true
+        // },
+        // {
+        //     title: 'Mô tả chi tiết sản phẩm sản phẩm',
+        //     dataIndex: 'desc',
+        //     sorter: true
+        // },
         {
-            title: 'Nội dung sản phẩm',
-            dataIndex: 'mainText',
-            sorter: true
-        },
-        {
-            title: 'Mô tả chi tiết sản phẩm sản phẩm',
-            dataIndex: 'desc',
+            title: 'số lượng',
+            dataIndex: 'quantity',
             sorter: true
         },
         {

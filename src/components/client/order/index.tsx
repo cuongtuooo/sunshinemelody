@@ -113,7 +113,7 @@ const OrderDetail = (props: IProps) => {
                                         </>
                                         :
                                         <>
-                                            <div>{item?.detail?.mainText}</div>
+                                            <div>{item?.detail?.name}</div>
                                             <div className='book-content ' style={{ width: "100%" }}>
                                                 <img src={`${import.meta.env.VITE_BACKEND_URL}/images/product/${item?.detail?.thumbnail}`} />
                                                 <div className='action' >

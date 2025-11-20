@@ -72,34 +72,41 @@ export const getProductsAPI = (query: string) => {
     )
 }
 
-// categories
+// Lấy con trực tiếp của 1 node
 export const getCategoryChildrenAPI = (id: string) => {
     const urlBackend = `/api/v1/category/${id}/children`;
     return axios.get<IBackendRes<ICategory[]>>(urlBackend);
 };
 
-// ✅ Tạo **thư mục con** (bắt buộc chọn parent)
-export const createChildCategoryAPI = (name: string, parentId: string, slug:string) => {
-    const urlBackend = "/api/v1/category";
-    return axios.post<IBackendRes<IRegister>>(urlBackend, { name, parentId, slug });
+// Tạo: root hoặc child
+// - Root: chỉ truyền name
+// - Child: truyền name + parentId
+// - slug: chỉ truyền khi thật sự có (để rỗng sẽ KHÔNG gửi)
+export const createChildCategoryAPI = (name: string, parentId?: string | null, slug?: string) => {
+    const urlBackend = `/api/v1/category`;
+    const payload: any = { name };
+    if (parentId) payload.parentId = parentId;       // chỉ set khi có
+    if (slug && slug.trim()) payload.slug = slug;    // chỉ set khi có
+    return axios.post<IBackendRes<IRegister>>(urlBackend, payload);
 };
 
-// (Khuyến nghị) Cho phép update kèm đổi parent nếu cần
-export const updateChildCategoryAPI = (_id: string, name: string, parentId?: string | null) => {
+// Update: đổi tên và/hoặc đổi parent
+// - name: chỉ gửi khi khác undefined và không rỗng
+// - parentId: gửi string hợp lệ hoặc null để gỡ parent; undefined = không đổi
+export const updateChildCategoryAPI = (_id: string, name?: string, parentId?: string | null) => {
     const urlBackend = `/api/v1/category/${_id}`;
-    return axios.patch<IBackendRes<IRegister>>(urlBackend, { name, parentId });
+    const payload: any = {};
+    if (typeof name === 'string' && name.trim() !== '') payload.name = name.trim();
+    if (parentId === null) payload.parentId = null;          // gỡ parent
+    else if (typeof parentId === 'string' && parentId) payload.parentId = parentId; // set parent mới
+    // nếu parentId === undefined => không đổi parent
+    return axios.patch<IBackendRes<IRegister>>(urlBackend, payload);
 };
-
+// Lấy các danh mục gốc (roots)
 export const getCategoriesParentAPI = () => {
     const urlBackend = `/api/v1/category/roots`;
-    return axios.get<IBackendRes<ICategory[]>>(urlBackend,
-        {
-            headers: {
-                delay: 100
-            }
-        }
-    )
-}
+    return axios.get<IBackendRes<ICategory[]>>(urlBackend, { headers: { delay: 100 } });
+};
 
 export const getCategoriesAPI = (query: string) => {
     const urlBackend = `/api/v1/category?${query}`;
@@ -133,11 +140,11 @@ export const updateCategoryAPI = (
         { name})
 }
 
+// Xoá (soft delete)
 export const deleteCategoryAPI = (_id: string) => {
     const urlBackend = `/api/v1/category/${_id}`;
-    return axios.delete<IBackendRes<IRegister>>(urlBackend)
-}
-
+    return axios.delete<IBackendRes<IRegister>>(urlBackend);
+};
 
 export const uploadFileAPI = (fileImg: any, folder: string) => {
     const bodyFormData = new FormData();
@@ -250,3 +257,30 @@ export const getDashboardAPI = () => {
     }>>(urlBackend)
 }
 
+// Update order status
+export const updateOrderStatusAPI = (id: string, status: string) => {
+    const urlBackend = `/api/v1/order/${id}/status`;
+    return axios.patch<IBackendRes<any>>(urlBackend, { status });
+};
+
+// Cancel order
+export const cancelOrderAPI = (id: string) => {
+    const urlBackend = `/api/v1/order/${id}/cancel`;
+    return axios.post<IBackendRes<any>>(urlBackend);
+};
+
+// Tạo đánh giá
+export const createReviewAPI = (
+    productId: string,
+    content: string,
+    rating: number
+) => {
+    const urlBackend = `/api/v1/review`;
+    return axios.post<IBackendRes<any>>(urlBackend, { productId, content, rating });
+};
+
+// Lấy danh sách đánh giá theo sản phẩm
+export const getReviewByProductAPI = (productId: string) => {
+    const urlBackend = `/api/v1/review?productId=${productId}`;
+    return axios.get<IBackendRes<any[]>>(urlBackend);
+};

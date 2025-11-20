@@ -25,6 +25,9 @@ import viVN from 'antd/locale/vi_VN';
 import ManageProductPage from './pages/admin/manage.product';
 import ProductPage from './pages/client/product';
 import ManageCategoryPage from './pages/admin/manage.category';
+import AboutUs from 'pages/client/about';
+import Showroom from './pages/client/showroom';
+import ContactInfo from './pages/client/lienhe';
 
 const router = createBrowserRouter([
   {
@@ -40,6 +43,18 @@ const router = createBrowserRouter([
         element: <ProductPage />,
       },
       {
+        path: "/about",
+        element: <AboutUs/>,
+      },
+      {
+        path: "/showroom",
+        element: <Showroom />,
+      },
+      {
+        path: "/lienhe",
+        element: <ContactInfo />,
+      },
+      {
         path: "/order",
         element: (
           <ProtectedRoute>
@@ -47,10 +62,7 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         )
       },
-      {
-        path: "/about",
-        element: <AboutPage />,
-      },
+      
       {
         path: "/history",
         element: (

@@ -72,7 +72,7 @@ const Payment = (props: IProps) => {
         const detail = carts.map(item => ({
             _id: item._id,
             quantity: item.quantity,
-            productName: item.detail.mainText
+            productName: item.detail.name
         }))
 
         setIsSubmit(true);
@@ -111,7 +111,7 @@ const Payment = (props: IProps) => {
                                         <div className='book-content'>
                                             <img src={`${import.meta.env.VITE_BACKEND_URL}/images/product/${item?.detail?.thumbnail}`} />
                                             <div className='title'>
-                                                {item?.detail?.mainText}
+                                                {item?.detail?.name}
                                             </div>
                                             <div className='price'>
                                                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(currentBookPrice)}
@@ -133,7 +133,7 @@ const Payment = (props: IProps) => {
                                     </>
                                     :
                                     <>
-                                        <div>{item?.detail?.mainText}</div>
+                                        <div>{item?.detail?.name}</div>
                                         <div className='book-content ' style={{ width: "100%" }}>
                                             <img src={`${import.meta.env.VITE_BACKEND_URL}/images/product/${item?.detail?.thumbnail}`} />
                                             <div className='action' >
