@@ -1,5 +1,4 @@
-// src/components/chat/ChatWidget.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Drawer, Button, Input, List } from "antd";
 import { MessageOutlined } from "@ant-design/icons";
 import {
@@ -8,6 +7,7 @@ import {
     getChatConversationsAPI,
 } from "@/services/api";
 import { useCurrentApp } from "@/components/context/app.context";
+import { io } from "socket.io-client";
 
 const ChatWidget = () => {
     const { user } = useCurrentApp();
@@ -18,7 +18,9 @@ const ChatWidget = () => {
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState("");
 
-    // ============ TẠO SESSION ID =============
+    const socketRef = useRef<any>(null);
+
+    // ============ TẠO SESSION ID ============
     useEffect(() => {
         let sid = "";
 
@@ -39,7 +41,7 @@ const ChatWidget = () => {
     const initConversation = async () => {
         if (!sessionId) return;
 
-        // gửi "__init__" để backend tạo conversation nếu chưa có
+        // gửi "__init__" để backend tạo conversation
         await userSendChatAPI(
             sessionId,
             "__init__",
@@ -59,7 +61,7 @@ const ChatWidget = () => {
         }
     };
 
-    // ============ LOAD MESSAGES =============
+    // ============ LOAD MESSAGES ============
     const loadMessages = async (cid?: string) => {
         const id = cid || conversationId;
         if (!id) return;
@@ -67,29 +69,37 @@ const ChatWidget = () => {
         const res = await getChatMessagesAPI(id);
         const list = res.data || [];
 
-        const filtered = list.filter((m: any) => m.content !== "__init__");
-        setMessages(filtered);
+        setMessages(list.filter((m: any) => m.content !== "__init__"));
     };
 
-    // Lúc đã có sessionId -> init conversation (1 lần)
+    // INIT ngay khi đã có session
     useEffect(() => {
-        if (sessionId && !conversationId) {
-            initConversation();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (sessionId && !conversationId) initConversation();
     }, [sessionId]);
 
-    // AUTO REFRESH KHI ĐANG MỞ CHAT
+    // ============ SOCKET REAL-TIME ============
+
     useEffect(() => {
-        if (!open || !conversationId) return;
+        if (!conversationId) return;
 
-        const timer = setInterval(() => {
-            loadMessages();
-        }, 1500);
+        // Chỉ tạo socket 1 lần
+        if (!socketRef.current) {
+            socketRef.current = io(import.meta.env.VITE_BACKEND_URL);
+        }
 
-        return () => clearInterval(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, conversationId]);
+        const socket = socketRef.current;
+
+        socket.on("new_message", (msg: any) => {
+            if (msg.conversationId === conversationId) {
+                // real-time push
+                setMessages((prev) => [...prev, msg]);
+            }
+        });
+
+        return () => {
+            if (socket) socket.off("new_message");
+        };
+    }, [conversationId]);
 
     // USER GỬI TIN
     const send = async () => {
@@ -104,8 +114,15 @@ const ChatWidget = () => {
         );
 
         setInput("");
-        await loadMessages();
     };
+
+    // TỰ CUỘN XUỐNG DÒNG CUỐI
+    const listRef = useRef<any>(null);
+    useEffect(() => {
+        if (listRef.current) {
+            listRef.current.scrollTop = listRef.current.scrollHeight;
+        }
+    }, [messages]);
 
     return (
         <>
@@ -129,7 +146,7 @@ const ChatWidget = () => {
                 onClose={() => setOpen(false)}
                 width={360}
             >
-                <div style={{ height: "70vh", overflowY: "auto" }}>
+                <div ref={listRef} style={{ height: "70vh", overflowY: "auto" }}>
                     <List
                         dataSource={messages}
                         renderItem={(item: any) => (
@@ -179,12 +196,7 @@ const ChatWidget = () => {
                     }}
                 />
 
-                <Button
-                    type="primary"
-                    block
-                    style={{ marginTop: 8 }}
-                    onClick={send}
-                >
+                <Button type="primary" block style={{ marginTop: 8 }} onClick={send}>
                     Gửi
                 </Button>
             </Drawer>

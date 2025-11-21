@@ -1,4 +1,3 @@
-// src/pages/admin/AdminChatPage.tsx
 import { useEffect, useState } from "react";
 import { Card, Select, List, Input, Button, Badge } from "antd";
 import {
@@ -6,6 +5,7 @@ import {
     getChatMessagesAPI,
     adminSendChatAPI,
 } from "@/services/api";
+import { io } from "socket.io-client";
 
 const { TextArea } = Input;
 
@@ -14,22 +14,19 @@ const AdminChatPage = () => {
     const [selected, setSelected] = useState<string>("");
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState("");
+    const socket = io(import.meta.env.VITE_BACKEND_URL);
 
-    // ====== LOAD CONVERSATIONS ======
     const loadConversations = async () => {
         const res = await getChatConversationsAPI();
         setConversations(res.data || []);
     };
 
-    // ====== LOAD MESSAGES ======
     const loadMessages = async (id?: string) => {
         const cid = id || selected;
         if (!cid) return;
 
         const res = await getChatMessagesAPI(cid);
-        const list = res.data || [];
-
-        setMessages(list.filter((m: any) => m.content !== "__init__"));
+        setMessages((res.data || []).filter((m: any) => m.content !== "__init__"));
     };
 
     useEffect(() => {
@@ -40,39 +37,27 @@ const AdminChatPage = () => {
         if (selected) loadMessages(selected);
     }, [selected]);
 
-    // AUTO REFRESH LIST + MESSAGES
+    // REAL-TIME SOCKET (chỉ tạo 1 lần)
     useEffect(() => {
-        const timer = setInterval(() => {
+        socket.on("new_message", (msg: any) => {
+            if (msg.conversationId === selected) {
+                setMessages(prev => [...prev, msg]); // real-time push
+            }
             loadConversations();
-            if (selected) loadMessages(selected);
-        }, 2000);
-
-        return () => clearInterval(timer);
+        });
+        return () => socket.disconnect();
     }, [selected]);
 
     // ADMIN GỬI TIN
     const send = async () => {
-        console.log("DEBUG selected:", selected);
-        console.log("DEBUG input:", input);
+        if (!selected || !input.trim()) return;
 
-        if (!selected) {
-            console.log("⛔ Không có conversationId -> không gọi API");
-            return;
-        }
-
-        if (!input.trim()) return;
-
-        const res = await adminSendChatAPI({
+        await adminSendChatAPI({
             conversationId: selected,
             content: input,
         });
 
-        console.log("📩 Admin gửi thành công:", res.data);
-
         setInput("");
-
-        await loadMessages(selected);
-        await loadConversations();
     };
 
     return (
@@ -94,7 +79,15 @@ const AdminChatPage = () => {
                         </span>
                     ),
                 }))}
-                onChange={(v) => setSelected(v)}
+                onChange={(v) => {
+                    if (!v) {
+                        setSelected("");
+                        setMessages([]);
+                        return;
+                    }
+                    setSelected(v);
+                    loadMessages(v);
+                }}
                 allowClear
             />
 
