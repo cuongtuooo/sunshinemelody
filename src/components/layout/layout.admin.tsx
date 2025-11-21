@@ -64,6 +64,11 @@ const LayoutAdmin = () => {
             key: '/admin/order',
             icon: <DollarCircleOutlined />
         },
+        {
+            label: <Link to='/admin/chat'>Manage chat</Link>,
+            key: '/admin/chat',
+            icon: <DollarCircleOutlined />
+        },
 
     ];
 

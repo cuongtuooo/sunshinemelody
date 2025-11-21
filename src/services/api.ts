@@ -284,3 +284,40 @@ export const getReviewByProductAPI = (productId: string) => {
     const urlBackend = `/api/v1/review?productId=${productId}`;
     return axios.get<IBackendRes<any[]>>(urlBackend);
 };
+
+/* =========================================================
+   CHAT – USER SEND
+========================================================= */
+
+// Khách gửi tin nhắn
+export const userSendChatAPI = (
+    sessionId: string,
+    content: string,
+    customerName?: string,
+    customerEmail?: string,
+    userId?: string
+) => {
+    return axios.post("/api/v1/chat/user-send", {
+        sessionId,
+        content,
+        name: customerName,
+        email: customerEmail,
+        userId,
+    });
+};
+
+
+// Lấy danh sách tin nhắn của conversation
+export const getChatMessagesAPI = (conversationId: string) => {
+    return axios.get(`/api/v1/chat/messages/${conversationId}`);
+};
+
+// Lấy toàn bộ conversation (admin)
+export const getChatConversationsAPI = () => {
+    return axios.get(`/api/v1/chat/conversations`);
+};
+
+// Admin gửi tin nhắn
+export const adminSendChatAPI = (body: any) => {
+    return axios.post(`/api/v1/chat/admin-send`, body);
+};

@@ -30,7 +30,8 @@ import "slick-carousel/slick/slick-theme.css";
 type FieldType = { range: { from: number; to: number }; category: string[] };
 
 const HomePage = () => {
-    const [searchTerm] = useOutletContext() as any;
+    const [searchTerm, setSearchTerm] = useOutletContext() as any;
+
 
     // ===== CATEGORIES =====
     const [listCategory, setListCategory] = useState<{ label: string, value: string }[]>([]);
@@ -85,6 +86,17 @@ const HomePage = () => {
         return () => window.removeEventListener('filterCategory', handleFilter);
     }, []);
 
+    useEffect(() => {
+        const handler = (e: any) => {
+            setCurrent(1);
+            setSelectedCategory(null);
+            setIncludeDescendants(false);
+            setSearchTerm(e.detail); // <<--- thêm dòng này
+        };
+
+        window.addEventListener("doSearch", handler);
+        return () => window.removeEventListener("doSearch", handler);
+    }, []);
 
     // ---------- PRELOAD SECTIONS ----------
     const preloadSections = async (parents: { label: string; value: string }[]) => {
@@ -120,7 +132,10 @@ const HomePage = () => {
         }
         if (filter) query += `&${filter}`;
         if (sortQuery) query += `&${sortQuery}`;
-        if (searchTerm) query += `&mainText=/${searchTerm}/i`;
+        if (searchTerm) {
+            query += `&mainText=/${encodeURIComponent(searchTerm)}/i`;
+        }
+
         
 
         const res = await getProductsAPI(query);

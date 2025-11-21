@@ -128,8 +128,13 @@ const AppHeader = () => {
                                 size="large"
                                 placeholder="Nhập từ khóa bạn muốn tìm kiếm"
                                 prefix={<SearchOutlined />}
-                                onPressEnter={(e) => navigate(`/search?keyword=${e.currentTarget.value}`)}
+                                onPressEnter={(e) => {
+                                    window.dispatchEvent(new CustomEvent("doSearch", {
+                                        detail: e.currentTarget.value
+                                    }));
+                                }}
                             />
+
                         </div>
 
                         <div className="right-group">

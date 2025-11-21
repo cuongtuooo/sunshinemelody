@@ -28,6 +28,8 @@ import ManageCategoryPage from './pages/admin/manage.category';
 import AboutUs from 'pages/client/about';
 import Showroom from './pages/client/showroom';
 import ContactInfo from './pages/client/lienhe';
+import ChatWidget from './components/chat/ChatWidget';
+import AdminChatPage from './pages/admin/AdminChatPage';
 
 const router = createBrowserRouter([
   {
@@ -114,6 +116,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ManageUserPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "chat",
+        element: (
+          <ProtectedRoute>
+            <AdminChatPage />
           </ProtectedRoute>
         ),
       },

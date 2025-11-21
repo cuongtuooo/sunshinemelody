@@ -117,4 +117,31 @@ declare global {
 
     }
 
+    interface IConversation {
+        _id: string;
+        customerName?: string;
+        customerEmail?: string;
+        status: string;
+        lastMessage?: string;
+        lastSender?: 'USER' | 'ADMIN';
+        updatedAt: string;
+    }
+
+    interface IChatMessage {
+        _id: string;
+        conversationId: string;
+        senderType: 'USER' | 'ADMIN';
+        content: string;
+        createdAt: string;
+    }
+
+    export interface IChatSession {
+        sessionId: string;            // ID duy nhất của khách: guest_xxx hoặc user_xxx
+        customerName?: string;        // Tên khách nếu có
+        customerEmail?: string;       // Email khách nếu có
+        lastMessage?: string;         // Nội dung tin nhắn cuối cùng
+        lastTime?: string;            // Thời gian tin cuối cùng
+        unreadCount?: number;         // Số tin chưa đọc (cho admin)
+    }
+
 }

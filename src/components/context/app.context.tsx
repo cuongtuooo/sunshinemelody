@@ -29,7 +29,6 @@ export const AppProvider = (props: TProps) => {
     useEffect(() => {
         const fetchAccount = async () => {
             const res = await fetchAccountAPI();
-            console.log("check cais res tu user ifo", res)
             const carts = localStorage.getItem("carts");
             if (res.data) {
                 setUser(res.data.user);
@@ -43,7 +42,6 @@ export const AppProvider = (props: TProps) => {
 
         fetchAccount();
     }, [])
-    console.log("check user từ context", user)
 
     return (
         <>
