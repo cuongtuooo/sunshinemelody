@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, Select, List, Input, Button, Badge } from "antd";
 import {
     getChatConversationsAPI,
@@ -14,41 +14,66 @@ const AdminChatPage = () => {
     const [selected, setSelected] = useState<string>("");
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState("");
-    const socket = io(import.meta.env.VITE_BACKEND_URL);
 
+    const socketRef = useRef<any>(null);
+    const listRef = useRef<HTMLDivElement>(null);
+
+    // LOAD conversations
     const loadConversations = async () => {
         const res = await getChatConversationsAPI();
         setConversations(res.data || []);
     };
 
-    const loadMessages = async (id?: string) => {
-        const cid = id || selected;
-        if (!cid) return;
+    // LOAD messages
+    const loadMessages = async (cid?: string) => {
+        const id = cid || selected;
+        if (!id) return;
 
-        const res = await getChatMessagesAPI(cid);
-        setMessages((res.data || []).filter((m: any) => m.content !== "__init__"));
+        const res = await getChatMessagesAPI(id);
+        const list = res.data || [];
+
+        // FULL HISTORY: giữ nguyên USER + ADMIN
+        setMessages(list);
     };
 
+    // LOAD list on first time
     useEffect(() => {
         loadConversations();
     }, []);
 
+    // LOAD message when selected changes
     useEffect(() => {
         if (selected) loadMessages(selected);
     }, [selected]);
 
-    // REAL-TIME SOCKET (chỉ tạo 1 lần)
+    // SOCKET real-time
     useEffect(() => {
+        if (!socketRef.current)
+            socketRef.current = io(import.meta.env.VITE_BACKEND_URL);
+
+        const socket = socketRef.current;
+
         socket.on("new_message", (msg: any) => {
+            // Nếu là đúng cuộc trò chuyện đang mở
             if (msg.conversationId === selected) {
-                setMessages(prev => [...prev, msg]); // real-time push
+                setMessages((prev) => [...prev, msg]);
             }
+
+            // Luôn update danh sách conversation
             loadConversations();
         });
-        return () => socket.disconnect();
+
+        return () => socket.off("new_message");
     }, [selected]);
 
-    // ADMIN GỬI TIN
+    // AUTO SCROLL
+    useEffect(() => {
+        if (listRef.current) {
+            listRef.current.scrollTop = listRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    // SEND
     const send = async () => {
         if (!selected || !input.trim()) return;
 
@@ -58,6 +83,7 @@ const AdminChatPage = () => {
         });
 
         setInput("");
+        // không loadMessages ngay – socket sẽ tự thêm msg
     };
 
     return (
@@ -80,11 +106,6 @@ const AdminChatPage = () => {
                     ),
                 }))}
                 onChange={(v) => {
-                    if (!v) {
-                        setSelected("");
-                        setMessages([]);
-                        return;
-                    }
                     setSelected(v);
                     loadMessages(v);
                 }}
@@ -92,6 +113,7 @@ const AdminChatPage = () => {
             />
 
             <div
+                ref={listRef}
                 style={{
                     height: 400,
                     overflowY: "auto",

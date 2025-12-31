@@ -42,10 +42,10 @@ const Showroom = () => {
                     GIỚI THIỆU CHUỖI SHOWROOM
                 ============================== */}
                 <section style={sectionStyle}>
-                    <h1 style={titleStyle}>Nhạc cụ Tiến Đạt – Giới thiệu Showroom nhạc cụ</h1>
+                    <h1 style={titleStyle}>Sunshine Melody – Giới thiệu Showroom nhạc cụ</h1>
 
                     <p style={textStyle}>
-                        Thành lập từ năm 2004, Nhạc cụ Tiến Đạt được biết đến là một trong những nhà phân phối nhạc cụ uy tín tại Hà Nội và TPHCM.
+                        Thành lập từ năm 2004, Sunshine Melody được biết đến là một trong những nhà phân phối nhạc cụ uy tín tại Hà Nội và TPHCM.
                         Kể từ năm 2013, Tiến Đạt chính thức trở thành Đại lý số 1 của Yamaha Việt Nam và nhận được rất nhiều giải thưởng
                         dành cho đại lý bán hàng xuất sắc nhất.
                     </p>
@@ -76,10 +76,10 @@ const Showroom = () => {
                     {/* =============================
                         ẢNH SHOWROOM HÀ NỘI
                     ============================== */}
-                    <img style={imageStyle} src="/images/showroom-hn-1.jpg" alt="Nhạc cụ Tiến Đạt Hà Nội" />
-                    <img style={imageStyle} src="/images/showroom-hn-2.jpg" alt="Nhạc cụ Tiến Đạt Hà Nội" />
-                    <img style={imageStyle} src="/images/showroom-hn-3.jpg" alt="Showroom nhạc cụ Tiến Đạt" />
-                    <img style={imageStyle} src="/images/showroom-hn-4.jpg" alt="Showroom nhạc cụ Tiến Đạt" />
+                    <img style={imageStyle} src="/images/showroom-hn-1.jpg" alt="Sunshine Melody Hà Nội" />
+                    <img style={imageStyle} src="/images/showroom-hn-2.jpg" alt="Sunshine Melody Hà Nội" />
+                    <img style={imageStyle} src="/images/showroom-hn-3.jpg" alt="Showroom Sunshine Melody" />
+                    <img style={imageStyle} src="/images/showroom-hn-4.jpg" alt="Showroom Sunshine Melody" />
                 </section>
 
                 {/* =============================
@@ -102,7 +102,7 @@ const Showroom = () => {
                     {/* =============================
                         ẢNH SHOWROOM TPHCM
                     ============================== */}
-                    <img style={imageStyle} src="/images/showroom-hcm-1.jpg" alt="Nhạc cụ Tiến Đạt TPHCM" />
+                    <img style={imageStyle} src="/images/showroom-hcm-1.jpg" alt="Sunshine Melody TPHCM" />
                     <img style={imageStyle} src="/images/showroom-hcm-2.jpg" alt="Showroom Tiến Đạt HCM" />
                     <img style={imageStyle} src="/images/showroom-hcm-3.jpg" alt="Showroom Tiến Đạt HCM" />
                 </section>
@@ -111,7 +111,7 @@ const Showroom = () => {
                     SẢN PHẨM CHÍNH
                 ============================== */}
                 <section style={sectionStyle}>
-                    <h2 style={subTitle}>3. Các sản phẩm chính tại Nhạc cụ Tiến Đạt</h2>
+                    <h2 style={subTitle}>3. Các sản phẩm chính tại Sunshine Melody</h2>
 
                     <ul style={{ marginLeft: "20px", lineHeight: "1.7", fontSize: "16px" }}>
                         <li>Đàn Piano: Yamaha, Casio, Roland, Kawai</li>
@@ -129,7 +129,7 @@ const Showroom = () => {
                     ĐỘI NGŨ NHÂN SỰ
                 ============================== */}
                 <section style={sectionStyle}>
-                    <h2 style={subTitle}>4. Đội ngũ nhân viên tại Nhạc cụ Tiến Đạt</h2>
+                    <h2 style={subTitle}>4. Đội ngũ nhân viên tại Sunshine Melody</h2>
 
                     <p style={textStyle}>
                         Tiến Đạt luôn coi trọng trình độ & kinh nghiệm của đội ngũ nhân viên.
@@ -146,8 +146,8 @@ const Showroom = () => {
                         NHẠC CỤ CHÍNH HÃNG – GIÁ TỐT NHẤT tại Việt Nam.
                     </p>
 
-                    <img style={imageStyle} src="/images/staff-hcm.jpg" alt="Nhân viên Nhạc cụ Tiến Đạt TPHCM" />
-                    <img style={imageStyle} src="/images/staff-hn.jpg" alt="Nhân viên Nhạc cụ Tiến Đạt Hà Nội" />
+                    <img style={imageStyle} src="/images/staff-hcm.jpg" alt="Nhân viên Sunshine Melody TPHCM" />
+                    <img style={imageStyle} src="/images/staff-hn.jpg" alt="Nhân viên Sunshine Melody Hà Nội" />
                 </section>
 
                 {/* =============================
@@ -157,7 +157,7 @@ const Showroom = () => {
                     <h2 style={subTitle}>Liên hệ & Phản hồi</h2>
 
                     <p style={textStyle}>
-                        Nhạc cụ Tiến Đạt rất vui khi nhận được thông tin phản hồi để phục vụ khách hàng tốt hơn.<br />
+                        Sunshine Melody rất vui khi nhận được thông tin phản hồi để phục vụ khách hàng tốt hơn.<br />
                         Website: https://nhaccutiendat.vn/ <br />
                         Facebook: https://www.facebook.com/nhaccutiendat
                     </p>

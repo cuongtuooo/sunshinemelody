@@ -57,7 +57,7 @@ export const updateUserAPI = (_id: string, name: string, phone: string) => {
 }
 
 export const deleteUserAPI = (_id: string) => {
-    const urlBackend = `/api/v1/user/${_id}`;
+    const urlBackend = `/api/v1/users/${_id}`;
     return axios.delete<IBackendRes<IRegister>>(urlBackend)
 }
 
@@ -228,13 +228,16 @@ export const getHistoryAPI = () => {
     return axios.get<IBackendRes<IHistory[]>>(urlBackend)
 }
 
-export const updateUserInfoAPI = (
-    _id: string, avatar: string, email:string,
-    name: string, phone: string, role:string) => {
-    const urlBackend = `/api/v1/users`;
-    return axios.patch<IBackendRes<IRegister>>(urlBackend,
-        { name, phone, avatar, _id, role, email })
-}
+export const updateUserInfoAPI = (payload: {
+    _id: string,
+    email: string,
+    name: string,
+    phone: string,
+    avatar: string
+}) => {
+    return axios.patch("/api/v1/users", payload);
+};
+
 
 export const updateUserPasswordAPI = (
     email: string, oldpass: string, newpass: string) => {
@@ -320,4 +323,8 @@ export const getChatConversationsAPI = () => {
 // Admin gửi tin nhắn
 export const adminSendChatAPI = (body: any) => {
     return axios.post(`/api/v1/chat/admin-send`, body);
+};
+
+export const getRelatedProductsAPI = (productId: string) => {
+    return axios.get(`/api/v1/product/related/${productId}`);
 };

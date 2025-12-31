@@ -310,3 +310,77 @@
         }
     }
 }
+
+.related-slider {
+    .item {
+        cursor: pointer;
+        background: #fff;
+        padding: 10px;
+        border-radius: 6px;
+        transition: 0.2s;
+        text-align: center;
+
+        &:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .name {
+            font-size: 14px;
+            margin-top: 8px;
+            min-height: 38px;
+            font-weight: 500;
+        }
+
+        .price {
+            margin-top: 4px;
+            color: #d0021b;
+            font-weight: 600;
+        }
+    }
+}
+.social-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    .social-btn {
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+        color: white;
+        text-decoration: none;
+        border: none;
+
+        &:hover {
+            opacity: 0.85;
+            transform: translateY(-2px);
+        }
+    }
+
+    .call {
+        background: #e53935;
+    }
+
+    .zalo {
+        background: #0084ff;
+    }
+
+    .fb {
+        background: #1877f2;
+    }
+}

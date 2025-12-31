@@ -1,26 +1,39 @@
-import { Row, Col, Rate, Divider, App, Breadcrumb } from 'antd';
+// ======================= IMPORT =======================
+import { Row, Col, Rate, Divider, App, Breadcrumb, Input, Button, List, Avatar } from 'antd';
 import ImageGallery from 'react-image-gallery';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { BsCartPlus } from 'react-icons/bs';
-import 'styles/product.scss';
 import ModalGallery from './modal.gallery';
 import { useCurrentApp } from '@/components/context/app.context';
 import { Link, useNavigate } from 'react-router-dom';
-import './product.detail.scss'
 import DOMPurify from 'dompurify';
-import { useMemo } from 'react'; 
-import { createReviewAPI, getReviewByProductAPI } from '@/services/api';
-import { Input, Button, List, Avatar } from 'antd';
+import Slider from 'react-slick';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
+import {
+    createReviewAPI,
+    getRelatedProductsAPI,
+    getReviewByProductAPI
+} from '@/services/api';
+
+import 'styles/product.scss';
+import './product.detail.scss';
+
 interface IProps {
     currentProduct: IProductTable | null;
 }
 
-type UserAction = "MINUS" | "PLUS"
+type UserAction = "MINUS" | "PLUS";
+
+// ========================================================
+//                   MAIN COMPONENT
+// ========================================================
 
 const ProductDetail = (props: IProps) => {
     const { currentProduct } = props;
-    // Sanitize trước khi hiển thị
+
     const safeMainText = useMemo(
         () => DOMPurify.sanitize(currentProduct?.mainText ?? ''),
         [currentProduct]
@@ -29,249 +42,196 @@ const ProductDetail = (props: IProps) => {
         () => DOMPurify.sanitize(currentProduct?.desc ?? ''),
         [currentProduct]
     );
-    const [imageGallery, setImageGallery] = useState<{
-        original: string;
-        thumbnail: string;
-        originalClass: string;
-        thumbnailClass: string;
-    }[]>([])
 
-    const [isOpenModalGallery, setIsOpenModalGallery] = useState<boolean>(false);
-    const [currentIndex, setCurrentIndex] = useState<number>(0);
+    const [imageGallery, setImageGallery] = useState<any[]>([]);
+    const [isOpenModalGallery, setIsOpenModalGallery] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     const refGallery = useRef<ImageGallery>(null);
-    const [currentQuantity, setCurrentQuantity] = useState<number>(1);
+    const [currentQuantity, setCurrentQuantity] = useState(1);
 
     const { setCarts, user } = useCurrentApp();
     const { message } = App.useApp();
-    
     const navigate = useNavigate();
 
-    // ============ REVIEW ============  
+    // ===================== REVIEW ===========================
     const [reviews, setReviews] = useState<any[]>([]);
-    const [reviewContent, setReviewContent] = useState<string>("");
-    const [rating, setRating] = useState<number>(5)
-    // const images = [
-    //     {
-    //         original: 'https://picsum.photos/id/1018/1000/600/',
-    //         thumbnail: 'https://picsum.photos/id/1018/250/150/',
-    //         originalClass: "original-image",
-    //         thumbnailClass: "thumbnail-image"
-    //     },
-    //     {
-    //         original: 'https://picsum.photos/id/1015/1000/600/',
-    //         thumbnail: 'https://picsum.photos/id/1015/250/150/',
-    //         originalClass: "original-image",
-    //         thumbnailClass: "thumbnail-image"
-    //     },
-    //     {
-    //         original: 'https://picsum.photos/id/1019/1000/600/',
-    //         thumbnail: 'https://picsum.photos/id/1019/250/150/',
-    //         originalClass: "original-image",
-    //         thumbnailClass: "thumbnail-image"
-    //     },
-    //     {
-    //         original: 'https://picsum.photos/id/1018/1000/600/',
-    //         thumbnail: 'https://picsum.photos/id/1018/250/150/',
-    //         originalClass: "original-image",
-    //         thumbnailClass: "thumbnail-image"
-    //     },
-    //     {
-    //         original: 'https://picsum.photos/id/1015/1000/600/',
-    //         thumbnail: 'https://picsum.photos/id/1015/250/150/',
-    //         originalClass: "original-image",
-    //         thumbnailClass: "thumbnail-image"
-    //     },
-    //     {
-    //         original: 'https://picsum.photos/id/1019/1000/600/',
-    //         thumbnail: 'https://picsum.photos/id/1019/250/150/',
-    //         originalClass: "original-image",
-    //         thumbnailClass: "thumbnail-image"
-    //     },
-    //     {
-    //         original: 'https://picsum.photos/id/1018/1000/600/',
-    //         thumbnail: 'https://picsum.photos/id/1018/250/150/',
-    //         originalClass: "original-image",
-    //         thumbnailClass: "thumbnail-image"
-    //     },
-    //     {
-    //         original: 'https://picsum.photos/id/1015/1000/600/',
-    //         thumbnail: 'https://picsum.photos/id/1015/250/150/',
-    //         originalClass: "original-image",
-    //         thumbnailClass: "thumbnail-image"
-    //     },
-    //     {
-    //         original: 'https://picsum.photos/id/1019/1000/600/',
-    //         thumbnail: 'https://picsum.photos/id/1019/250/150/',
-    //         originalClass: "original-image",
-    //         thumbnailClass: "thumbnail-image"
-    //     },
-    // ];
+    const [reviewContent, setReviewContent] = useState("");
+    const [rating, setRating] = useState(5);
+
+    // ===================== RELATED PRODUCTS ==================
+    const [relatedProducts, setRelatedProducts] = useState<IProductTable[]>([]);
 
     useEffect(() => {
-        if (currentProduct) {
-            //build images 
-            const images = [];
-            if (currentProduct.thumbnail) {
-                images.push(
-                    {
-                        original: `${import.meta.env.VITE_BACKEND_URL}/images/product/${currentProduct.thumbnail}`,
-                        thumbnail: `${import.meta.env.VITE_BACKEND_URL}/images/product/${currentProduct.thumbnail}`,
-                        originalClass: "original-image",
-                        thumbnailClass: "thumbnail-image"
-                    },
-                )
-            }
-            if (currentProduct.slider) {
-                currentProduct.slider?.map(item => {
-                    images.push(
-                        {
-                            original: `${import.meta.env.VITE_BACKEND_URL}/images/product/${item}`,
-                            thumbnail: `${import.meta.env.VITE_BACKEND_URL}/images/product/${item}`,
-                            originalClass: "original-image",
-                            thumbnailClass: "thumbnail-image"
-                        },
-                    )
-                })
-            }
-            setImageGallery(images)
-        }
-    }, [currentProduct])
+        if (!currentProduct?._id) return;
 
-    useEffect(() => {
-        if (currentProduct?._id) {
-            getReviewByProductAPI(currentProduct._id).then(res => {
-                if (res && res.data) {
-                    setReviews(res.data);
-                }
-            });
-        }
+        getRelatedProductsAPI(currentProduct._id).then(res => {
+            if (res?.data) setRelatedProducts(res.data);
+        });
     }, [currentProduct]);
 
-    const handleOnClickImage = () => {
-        //get current index onClick
-        setIsOpenModalGallery(true);
-        setCurrentIndex(refGallery?.current?.getCurrentIndex() ?? 0)
-    }
+    // ===================== GALLERY ===========================
+    useEffect(() => {
+        if (!currentProduct) return;
 
+        const imgs: any[] = [];
+
+        if (currentProduct.thumbnail) {
+            imgs.push({
+                original: `${import.meta.env.VITE_BACKEND_URL}/images/product/${currentProduct.thumbnail}`,
+                thumbnail: `${import.meta.env.VITE_BACKEND_URL}/images/product/${currentProduct.thumbnail}`,
+                originalClass: "original-image",
+                thumbnailClass: "thumbnail-image"
+            });
+        }
+
+        currentProduct.slider?.forEach(img => {
+            imgs.push({
+                original: `${import.meta.env.VITE_BACKEND_URL}/images/product/${img}`,
+                thumbnail: `${import.meta.env.VITE_BACKEND_URL}/images/product/${img}`,
+                originalClass: "original-image",
+                thumbnailClass: "thumbnail-image"
+            });
+        });
+
+        setImageGallery(imgs);
+    }, [currentProduct]);
+
+    // ===================== GET REVIEWS =========================
+    useEffect(() => {
+        if (!currentProduct?._id) return;
+
+        getReviewByProductAPI(currentProduct._id).then(res => {
+            if (res?.data) setReviews(res.data);
+        });
+    }, [currentProduct]);
+
+    // ===================== IMAGE MODAL =========================
+    const handleOnClickImage = () => {
+        setIsOpenModalGallery(true);
+        setCurrentIndex(refGallery.current?.getCurrentIndex() ?? 0);
+    };
+
+    // ===================== QUANTITY CONTROL =====================
     const handleChangeButton = (type: UserAction) => {
-        if (type === 'MINUS') {
-            if (currentQuantity - 1 <= 0) return;
-            setCurrentQuantity(currentQuantity - 1);
+        if (!currentProduct) return;
+
+        if (type === "MINUS" && currentQuantity > 1) {
+            setCurrentQuantity(qty => qty - 1);
         }
-        if (type === 'PLUS' && currentProduct) {
-            if (currentQuantity === +currentProduct.quantity) return; //max
-            setCurrentQuantity(currentQuantity + 1);
+        if (type === "PLUS" && currentQuantity < currentProduct.quantity) {
+            setCurrentQuantity(qty => qty + 1);
         }
-    }
+    };
 
     const handleChangeInput = (value: string) => {
-        if (!isNaN(+value)) {
-            if (+value > 0 && currentProduct && +value < +currentProduct.quantity) {
-                setCurrentQuantity(+value);
-            }
-        }
-    }
+        if (!currentProduct) return;
+        const num = Number(value);
+        if (isNaN(num)) return;
 
+        if (num <= 0) setCurrentQuantity(1);
+        else if (num > currentProduct.quantity) setCurrentQuantity(currentProduct.quantity);
+        else setCurrentQuantity(num);
+    };
+
+    // ===================== ADD TO CART ==========================
     const handleAddToCart = (isBuyNow = false) => {
         if (!user) {
-            message.error("Bạn cần đăng nhập để thực hiện tính năng này.")
+            message.error("Bạn cần đăng nhập.");
             return;
         }
-        //update localStorage
-        const cartStorage = localStorage.getItem("carts");
-        if (cartStorage && currentProduct) {
-            //update
-            const carts = JSON.parse(cartStorage) as ICart[];
+        if (!currentProduct) return;
 
-            //check exist
-            let isExistIndex = carts.findIndex(c => c._id === currentProduct?._id);
-            if (isExistIndex > -1) {
-                carts[isExistIndex].quantity =
-                    carts[isExistIndex].quantity + currentQuantity;
+        const maxQty = Number(currentProduct.quantity);
+        const cartStorage = localStorage.getItem("carts");
+
+        if (cartStorage) {
+            const carts = JSON.parse(cartStorage);
+            const index = carts.findIndex(c => c._id === currentProduct._id);
+
+            if (index > -1) {
+                const newQty = carts[index].quantity + currentQuantity;
+                if (newQty > maxQty) return message.error(`Chỉ còn ${maxQty} sản phẩm.`);
+                carts[index].quantity = newQty;
             } else {
-                carts.push({
-                    quantity: currentQuantity,
-                    _id: currentProduct._id,
-                    detail: currentProduct
-                })
+                if (currentQuantity > maxQty) return message.error(`Chỉ còn ${maxQty} sản phẩm.`);
+                carts.push({ _id: currentProduct._id, quantity: currentQuantity, detail: currentProduct });
             }
 
             localStorage.setItem("carts", JSON.stringify(carts));
-
-            //sync React Context
             setCarts(carts);
         } else {
-            //create
-            const data = [{
-                _id: currentProduct?._id!,
-                quantity: currentQuantity,
-                detail: currentProduct!
-            }]
-            localStorage.setItem("carts", JSON.stringify(data))
-
-            //sync React Context
+            if (currentQuantity > maxQty) return message.error(`Chỉ còn ${maxQty} sản phẩm.`);
+            const data = [{ _id: currentProduct._id, quantity: currentQuantity, detail: currentProduct }];
+            localStorage.setItem("carts", JSON.stringify(data));
             setCarts(data);
         }
 
-        if (isBuyNow) {
-            navigate("/order")
-        } else
-            message.success("Thêm sản phẩm vào giỏ hàng thành công.")
-    }
+        isBuyNow ? navigate("/order") : message.success("Đã thêm giỏ hàng");
+    };
 
+    // ===================== SUBMIT REVIEW ===========================
     const handleSubmitReview = async () => {
-        if (!user) {
-            message.error("Bạn cần đăng nhập để đánh giá.");
-            return;
-        }
-        if (!reviewContent.trim()) {
-            message.error("Nội dung đánh giá không được để trống.");
-            return;
-        }
+        if (!user) return message.error("Bạn cần đăng nhập.");
+        if (!reviewContent.trim()) return message.error("Nội dung không được trống.");
 
-        const res = await createReviewAPI(
-            currentProduct!._id,
-            reviewContent,
-            rating
-        );
+        const res = await createReviewAPI(currentProduct!._id, reviewContent, rating);
 
-        if (res && res.data) {
+        if (res?.data) {
             message.success("Đã gửi đánh giá!");
             setReviews(prev => [
                 {
                     content: reviewContent,
                     rating,
                     createdAt: new Date(),
-                    userInfo: {
-                        email: user.email
-                    }
+                    userInfo: { email: user.email }
                 },
                 ...prev
             ]);
+
             setReviewContent("");
             setRating(5);
         }
     };
 
+    // ===================== ANTI-DRAG CLICK FIX =======================
+    const [isDragging, setIsDragging] = useState(false);
+
+    // ===================== SLIDER SETTINGS ============================
+    const sliderSettings = {
+        dots: false,
+        infinite: true,
+        speed: 1200,
+        slidesToShow: 4,
+        slidesToScroll: 1,
+        autoplay: true,
+        cssEase: "linear",
+        autoplaySpeed: 1500,
+        swipeToSlide: true,
+        responsive: [
+            { breakpoint: 1024, settings: { slidesToShow: 3 } },
+            { breakpoint: 768, settings: { slidesToShow: 2 } },
+            { breakpoint: 480, settings: { slidesToShow: 1 } }
+        ]
+    };
+
+    // ========================================================
     return (
-        <div style={{ background: '#efefef', padding: "20px 0" }}>
-            <div className='view-detail-Product' style={{ maxWidth: 1440, margin: '0 auto' }}>
+        <div style={{ background: "#efefef", padding: "20px 0" }}>
+            <div className="view-detail-Product" style={{ maxWidth: 1440, margin: "0 auto" }}>
 
                 <Breadcrumb
                     separator=">"
                     items={[
-                        { title: <Link to={"/"}>Trang Chủ</Link> },
-                        { title: 'Xem chi tiết sản phẩm' },
+                        { title: <Link to="/">Trang Chủ</Link> },
+                        { title: "Xem chi tiết sản phẩm" }
                     ]}
                 />
 
-                {/* ================== ROW 1 → Ảnh + Thông tin ================== */}
-                <div style={{ padding: "20px", background: '#fff', borderRadius: 5 }}>
+                {/* ======================== ẢNH + INFO ========================== */}
+                <div style={{ padding: 20, background: "#fff", borderRadius: 5 }}>
                     <Row gutter={[20, 20]}>
-
-                        {/* ẢNH BÊN TRÁI */}
-                        <Col md={10} sm={24} xs={24}>
+                        <Col md={10} xs={24}>
                             <ImageGallery
                                 ref={refGallery}
                                 items={imageGallery}
@@ -279,81 +239,142 @@ const ProductDetail = (props: IProps) => {
                                 showFullscreenButton={false}
                                 renderLeftNav={() => <></>}
                                 renderRightNav={() => <></>}
-                                slideOnThumbnailOver={true}
-                                onClick={() => handleOnClickImage()}
+                                onClick={handleOnClickImage}
                             />
                         </Col>
 
-                        {/* THÔNG TIN SẢN PHẨM BÊN PHẢI */}
-                        <Col md={14} sm={24}>
-                            <div className='title'>
+                        <Col md={14} xs={24}>
+                            <div className="title">
                                 <strong>Tên sản phẩm:</strong> {currentProduct?.name}
                             </div>
 
-                            <div className='price'>
-                                <span className='currency'>
-                                    {
-                                        new Intl.NumberFormat('vi-VN', {
-                                            style: 'currency',
-                                            currency: 'VND'
-                                        }).format(currentProduct?.price ?? 0)
-                                    }
+                            <div className="price">
+                                <span className="currency">
+                                    {new Intl.NumberFormat("vi-VN", {
+                                        style: "currency",
+                                        currency: "VND"
+                                    }).format(currentProduct?.price ?? 0)}
                                 </span>
                             </div>
 
-                            <div className='delivery'>
+                            <div className="delivery">
                                 <div>
-                                    <span className='left'>Vận chuyển</span>
-                                    <span className='right'>Miễn phí vận chuyển</span>
+                                    <span className="left">Vận chuyển</span>
+                                    <span className="right">Miễn phí vận chuyển</span>
                                 </div>
                             </div>
 
-                            <div className='quantity'>
-                                <span className='left'>Số lượng</span>
-                                <span className='right'>
-                                    <button onClick={() => handleChangeButton('MINUS')}><MinusOutlined /></button>
-                                    <input onChange={(e) => handleChangeInput(e.target.value)} value={currentQuantity} />
-                                    <button onClick={() => handleChangeButton('PLUS')}><PlusOutlined /></button>
+                            <div className="quantity">
+                                <span className="left">Số lượng</span>
+                                <span className="right">
+                                    <button onClick={() => handleChangeButton("MINUS")}><MinusOutlined /></button>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={currentProduct?.quantity}
+                                        value={currentQuantity}
+                                        onChange={(e) => handleChangeInput(e.target.value)}
+                                    />
+                                    <button onClick={() => handleChangeButton("PLUS")}><PlusOutlined /></button>
                                 </span>
                             </div>
 
-                            <div className='buy'>
-                                <button className='cart' onClick={() => handleAddToCart()}>
-                                    <BsCartPlus className='icon-cart' />
+                            <div className="buy">
+                                <button className="cart" onClick={() => handleAddToCart()}>
+                                    <BsCartPlus className="icon-cart" />
                                     <span>Thêm vào giỏ hàng</span>
                                 </button>
-                                <button className='now' onClick={() => handleAddToCart(true)}>Mua ngay</button>
+                                <button className="now" onClick={() => handleAddToCart(true)}>Mua ngay</button>
                             </div>
+                            {/* === SOCIAL BUTTONS === */}
+                            <div className="social-buttons">
+                                <a
+                                    className="social-btn call"
+                                    href="tel:0987654321"
+                                >
+                                    📞 Gọi ngay
+                                </a>
 
+                                <a
+                                    className="social-btn zalo"
+                                    href="https://zalo.me/0987654321"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    💬 Zalo
+                                </a>
+
+                                <a
+                                    className="social-btn fb"
+                                    href="https://www.facebook.com/yourpage"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    🔵 Facebook
+                                </a>
+                            </div>
+                            
+                            {/* ======================== SẢN PHẨM LIÊN QUAN ========================= */}
+                            {relatedProducts.length > 0 && (
+                                <div style={{ marginTop: 30, background: "#fff", padding: 20, borderRadius: 5 }}>
+                                    <h3>Sản phẩm liên quan</h3>
+                                    <Divider />
+
+                                    <Slider {...sliderSettings}>
+                                        {relatedProducts.map(item => (
+                                            <div className="related-slider" key={item._id}>
+                                                <div
+                                                    className="item"
+                                                    onMouseDown={() => setIsDragging(false)}
+                                                    onMouseMove={() => setIsDragging(true)}
+                                                    onMouseUp={() => {
+                                                        if (!isDragging) navigate(`/Product/${item._id}`);
+                                                    }}
+                                                >
+                                                    <img
+                                                        src={`${import.meta.env.VITE_BACKEND_URL}/images/product/${item.thumbnail}`}
+                                                        alt={item.name}
+                                                    />
+
+                                                    <div className="name">{item.name}</div>
+
+                                                    <div className="price">
+                                                        {new Intl.NumberFormat("vi-VN", {
+                                                            style: "currency",
+                                                            currency: "VND"
+                                                        }).format(item.price)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </Slider>
+                                </div>
+                            )}
                         </Col>
                     </Row>
                 </div>
 
-                {/* ================== ROW 2 → NỘI DUNG SẢN PHẨM ================== */}
+                
+
+                {/* ======================== MAIN CONTENT ========================= */}
                 <div style={{ marginTop: 20, background: "#fff", padding: 20, borderRadius: 5 }}>
                     <h3>Nội dung sản phẩm</h3>
                     <Divider />
-
                     <div className="html-content" dangerouslySetInnerHTML={{ __html: safeMainText }} />
 
                     <h3 style={{ marginTop: 30 }}>Mô tả chi tiết sản phẩm</h3>
                     <Divider />
-
                     <div className="html-content" dangerouslySetInnerHTML={{ __html: safeDesc }} />
                 </div>
 
-                {/* ================== REVIEW ================== */}
+                {/* ======================== REVIEW ========================= */}
                 <div style={{ marginTop: 30, background: "#fff", padding: 20, borderRadius: 5 }}>
                     <h3>Đánh giá sản phẩm</h3>
                     <Divider />
 
-                    {/* FORM ĐÁNH GIÁ */}
                     <div style={{ marginBottom: 20 }}>
-                        <div style={{ marginBottom: 10 }}>
-                            <strong>Chọn số sao:</strong>
-                            <br />
-                            <Rate value={rating} onChange={setRating} />
-                        </div>
+                        <strong>Chọn số sao:</strong>
+                        <Rate value={rating} onChange={setRating} />
 
                         <Input.TextArea
                             rows={4}
@@ -362,25 +383,13 @@ const ProductDetail = (props: IProps) => {
                             onChange={(e) => setReviewContent(e.target.value)}
                         />
 
-                        <Button
-                            type="primary"
-                            style={{ marginTop: 10 }}
-                            onClick={() => {
-                                if (!user) {
-                                    message.error("Bạn cần đăng nhập để đánh giá sản phẩm.");
-                                    return;
-                                }
-                                handleSubmitReview();
-                            }}
-                        >
+                        <Button type="primary" style={{ marginTop: 10 }} onClick={handleSubmitReview}>
                             Gửi đánh giá
                         </Button>
                     </div>
 
-
                     <Divider />
 
-                    {/* DANH SÁCH ĐÁNH GIÁ */}
                     <List
                         itemLayout="horizontal"
                         dataSource={reviews}
@@ -392,9 +401,7 @@ const ProductDetail = (props: IProps) => {
                                     title={
                                         <div>
                                             <strong>{item.userInfo?.email}</strong>
-                                            <div>
-                                                <Rate disabled value={item.rating} />
-                                            </div>
+                                            <Rate disabled value={item.rating} />
                                         </div>
                                     }
                                     description={
@@ -411,8 +418,7 @@ const ProductDetail = (props: IProps) => {
                     />
                 </div>
 
-
-                {/* MODAL */}
+                {/* ================= MODAL GALLERY ================= */}
                 <ModalGallery
                     isOpen={isOpenModalGallery}
                     setIsOpen={setIsOpenModalGallery}
@@ -420,11 +426,9 @@ const ProductDetail = (props: IProps) => {
                     items={imageGallery}
                     title={currentProduct?.mainText ?? ""}
                 />
-
             </div>
         </div>
     );
-
-}
+};
 
 export default ProductDetail;

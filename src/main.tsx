@@ -5,14 +5,17 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
+
 import AboutPage from 'pages/client/about';
 import LoginPage from 'pages/client/auth/login';
 import RegisterPage from 'pages/client/auth/register';
 import 'styles/global.scss'
 import HomePage from 'pages/client/home';
+
 import { App, ConfigProvider } from 'antd';
 import { AppProvider } from 'components/context/app.context';
 import ProtectedRoute from '@/components/auth';
+
 import DashBoardPage from 'pages/admin/dashboard';
 import ManageOrderPage from 'pages/admin/manage.order';
 import ManageUserPage from 'pages/admin/manage.user';
@@ -22,40 +25,30 @@ import HistoryPage from 'pages/client/history';
 
 import enUS from 'antd/locale/en_US';
 import viVN from 'antd/locale/vi_VN';
+
 import ManageProductPage from './pages/admin/manage.product';
 import ProductPage from './pages/client/product';
 import ManageCategoryPage from './pages/admin/manage.category';
-import AboutUs from 'pages/client/about';
 import Showroom from './pages/client/showroom';
 import ContactInfo from './pages/client/lienhe';
+
 import ChatWidget from './components/chat/ChatWidget';
 import AdminChatPage from './pages/admin/AdminChatPage';
+
+// ⭐⭐ Guard mới — bảo vệ quyền SUPER_ADMIN
+import AdminGuard from "@/components/auth/AdminGuard";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
     children: [
-      {
-        index: true,
-        element: <HomePage />
-      },
-      {
-        path: "/Product/:id",
-        element: <ProductPage />,
-      },
-      {
-        path: "/about",
-        element: <AboutUs/>,
-      },
-      {
-        path: "/showroom",
-        element: <Showroom />,
-      },
-      {
-        path: "/lienhe",
-        element: <ContactInfo />,
-      },
+      { index: true, element: <HomePage /> },
+      { path: "/Product/:id", element: <ProductPage /> },
+      { path: "/about", element: <AboutPage /> },
+      { path: "/showroom", element: <Showroom /> },
+      { path: "/lienhe", element: <ContactInfo /> },
+
       {
         path: "/order",
         element: (
@@ -64,7 +57,7 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         )
       },
-      
+
       {
         path: "/history",
         element: (
@@ -75,78 +68,29 @@ const router = createBrowserRouter([
       }
     ]
   },
+
+  // ⭐⭐⭐ PHẦN ADMIN — CHỈ SUPER_ADMIN được vào
   {
-    path: "admin",
-    element: <LayoutAdmin />,
+    path: "/admin",
+    element: <AdminGuard />,   // ✔ Bảo vệ toàn bộ admin
     children: [
       {
-        index: true,
-        element: (
-          <ProtectedRoute>
-            <DashBoardPage />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "product",
-        element: (
-          <ProtectedRoute>
-            <ManageProductPage />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "category",
-        element: (
-          <ProtectedRoute>
-            <ManageCategoryPage />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "order",
-        element: (
-          <ProtectedRoute>
-            <ManageOrderPage />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "user",
-        element: (
-          <ProtectedRoute>
-            <ManageUserPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "chat",
-        element: (
-          <ProtectedRoute>
-            <AdminChatPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/admin",
-        element: (
-          <ProtectedRoute>
-            <div>admin page</div>
-          </ProtectedRoute>
-        ),
-      },
-
+        path: "",
+        element: <LayoutAdmin />,
+        children: [
+          { index: true, element: <DashBoardPage /> },
+          { path: "product", element: <ManageProductPage /> },
+          { path: "category", element: <ManageCategoryPage /> },
+          { path: "order", element: <ManageOrderPage /> },
+          { path: "user", element: <ManageUserPage /> },
+          { path: "chat", element: <AdminChatPage /> },
+        ]
+      }
     ]
   },
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
 
+  { path: "/login", element: <LoginPage /> },
+  { path: "/register", element: <RegisterPage /> },
 ]);
 
 createRoot(document.getElementById('root')!).render(
@@ -159,4 +103,4 @@ createRoot(document.getElementById('root')!).render(
       </AppProvider>
     </App>
   </StrictMode>,
-)
+);

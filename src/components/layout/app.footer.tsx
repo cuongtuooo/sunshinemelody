@@ -57,7 +57,7 @@ const AppFooter = () => {
             <div className="footer-top">
                 {/* ====== CỘT 1: THÔNG TIN CÔNG TY ====== */}
                 <div className="footer-col">
-                    <h3>NHẠC CỤ TIẾN ĐẠT</h3>
+                    <h3>Sunshine Melody</h3>
                     <p className="footer-subtitle">
                         <EnvironmentOutlined /> <b>Trụ sở Hà Nội:</b>
                     </p>
@@ -136,7 +136,7 @@ const AppFooter = () => {
 
             <div className="footer-bottom">
                 <p>
-                    © 2025 Nhạc cụ Tiến Đạt - Công ty CP Thương mại & Dịch vụ Kỹ thuật
+                    © 2025 Sunshine Melody - Công ty CP Thương mại & Dịch vụ Kỹ thuật
                     Thành Đạt
                 </p>
                 <p>Mã số kinh doanh: 0101516915. Cấp ngày 30/07/2004 tại Hà Nội.</p>

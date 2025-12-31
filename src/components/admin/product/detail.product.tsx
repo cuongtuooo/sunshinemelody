@@ -115,8 +115,24 @@ const DetailProduct = (props: IProps) => {
                 >
                     <Descriptions.Item label="Id">{dataViewDetail?._id}</Descriptions.Item>
                     <Descriptions.Item label="Tên sản phẩm">{dataViewDetail?.name}</Descriptions.Item>
-                    <Descriptions.Item label="Chức năng chính sản phẩm">{dataViewDetail?.mainText}</Descriptions.Item>
-                    <Descriptions.Item label="Mô tả chi tiết sản phẩm">{dataViewDetail?.desc}</Descriptions.Item>
+                    <Descriptions.Item
+                        label="Chức năng chính sản phẩm"
+                        span={2}
+                    >
+                        <div
+                            dangerouslySetInnerHTML={{ __html: dataViewDetail?.mainText || "" }}
+                        />
+                    </Descriptions.Item>
+
+                    <Descriptions.Item
+                        label="Mô tả chi tiết sản phẩm"
+                        span={2}
+                    >
+                        <div
+                            dangerouslySetInnerHTML={{ __html: dataViewDetail?.desc || "" }}
+                        />
+                    </Descriptions.Item>
+
                     <Descriptions.Item label="Giá tiền">{
                         new Intl.NumberFormat('vi-VN',
                             { style: 'currency', currency: 'VND' })

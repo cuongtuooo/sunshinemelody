@@ -12,15 +12,15 @@ const AboutUs = () => {
                 <section>
                     <h1>Giới thiệu</h1>
                     <p>
-                        Nhạc cụ Tiến Đạt được thành lập vào năm 2004, là thành viên của Công ty Cổ phần TMDV & KT Thành Đạt (THADACO)
+                        Sunshine Melody được thành lập vào năm 2004, là thành viên của Công ty Cổ phần TMDV & KT Thành Đạt (THADACO)
                         và là đại lý cấp 1 của các thương hiệu nổi tiếng như Yamaha, Roland, Kawai, Casio, Fender, Valote…
                     </p>
                     <p>
-                        Danh mục sản phẩm nổi bật của Nhạc cụ Tiến Đạt bao gồm đàn Organ, Guitar, Piano, Ukulele, trống điện tử, sáo, kèn,
+                        Danh mục sản phẩm nổi bật của Sunshine Melody bao gồm đàn Organ, Guitar, Piano, Ukulele, trống điện tử, sáo, kèn,
                         phụ kiện âm nhạc, thiết bị âm thanh… Chúng tôi phân phối sản phẩm rộng rãi tại 2 showroom Hà Nội và TP.HCM.
                     </p>
                     <p>
-                        Với đội ngũ nhân viên chuyên nghiệp, Nhạc cụ Tiến Đạt cung cấp đầy đủ giấy phép – tài liệu phục vụ công tác hồ sơ,
+                        Với đội ngũ nhân viên chuyên nghiệp, Sunshine Melody cung cấp đầy đủ giấy phép – tài liệu phục vụ công tác hồ sơ,
                         khảo sát, triển khai lắp đặt cho các dự án lớn cùng dịch vụ hậu mãi tận tâm.
                     </p>
                 </section>
@@ -32,7 +32,7 @@ const AboutUs = () => {
                     <h2>1. Thông tin công ty</h2>
 
                     <ul className="info-list">
-                        <li><strong>Tên công ty:</strong> Công ty Cổ phần Thương mại và Dịch vụ Kỹ thuật Thành Đạt (Nhạc cụ Tiến Đạt)</li>
+                        <li><strong>Tên công ty:</strong> Công ty Cổ phần Thương mại và Dịch vụ Kỹ thuật Thành Đạt (Sunshine Melody)</li>
                         <li><strong>Tên quốc tế:</strong> Thanh Dat Trading and Technology Joint Stock Company</li>
                         <li><strong>Thành lập:</strong> 2004</li>
                         <li><strong>Hoạt động:</strong> Phân phối nhạc cụ chính hãng, thiết bị âm thanh, phụ kiện âm nhạc</li>
@@ -116,7 +116,7 @@ const AboutUs = () => {
                 <section>
                     <h2>4. Chặng đường phát triển</h2>
                     <p>
-                        Trải qua 20 năm phát triển, Nhạc cụ Tiến Đạt đã trở thành địa chỉ tin cậy của người chơi nhạc, nhạc sĩ, ca sĩ,
+                        Trải qua 20 năm phát triển, Sunshine Melody đã trở thành địa chỉ tin cậy của người chơi nhạc, nhạc sĩ, ca sĩ,
                         phụ huynh và là đối tác của nhiều trường học – trung tâm.
                     </p>
                 </section>
@@ -146,7 +146,7 @@ const AboutUs = () => {
                     </ul>
 
                     <p>
-                        Với nhiều năm liền thuộc Top Đại lý xuất sắc của Yamaha, Nhạc cụ Tiến Đạt tự hào là nhà cung cấp Piano – Organ uy tín
+                        Với nhiều năm liền thuộc Top Đại lý xuất sắc của Yamaha, Sunshine Melody tự hào là nhà cung cấp Piano – Organ uy tín
                         cho nhiều dự án lớn.
                     </p>
                 </section>

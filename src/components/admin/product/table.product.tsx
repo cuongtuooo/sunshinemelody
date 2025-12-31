@@ -80,11 +80,36 @@ const TableProduct = () => {
             },
 
         },
+        // 👇 CỘT ẢNH THUMBNAIL MỚI
+        {
+            title: 'Ảnh',
+            dataIndex: 'thumbnail',
+            hideInSearch: true,
+            width: 80,
+            render: (_, record) => {
+                const src = `${import.meta.env.VITE_BACKEND_URL}/images/product/${record.thumbnail}`;
+                return (
+                    <img
+                        src={src}
+                        alt={record.name}
+                        style={{
+                            width: 60,
+                            height: 60,
+                            objectFit: 'cover',
+                            borderRadius: 4,
+                            border: '1px solid #f0f0f0',
+                        }}
+                    />
+                );
+            },
+        },
+
         {
             title: 'Tên sản phẩm',
             dataIndex: 'name',
             sorter: true
         },
+        
         // {
         //     title: 'Nội dung sản phẩm',
         //     dataIndex: 'mainText',

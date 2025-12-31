@@ -1,0 +1,44 @@
+/* ===================== STICKY SOCIAL BUTTON ===================== */
+
+.sticky-social {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 99999; // nằm trên hết
+}
+
+.sticky-btn {
+    width: 55px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 26px;
+    color: white;
+    cursor: pointer;
+    transition: 0.25s ease;
+    text-decoration: none;
+
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25);
+
+    &:hover {
+        transform: scale(1.15);
+        opacity: 0.9;
+    }
+}
+
+.sticky-btn.call {
+    background: #e53935;
+}
+
+.sticky-btn.zalo {
+    background: #0084ff;
+}
+
+.sticky-btn.fb {
+    background: #1877f2;
+}

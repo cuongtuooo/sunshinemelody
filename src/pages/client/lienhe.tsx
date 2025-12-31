@@ -4,7 +4,7 @@ const ContactInfo: React.FC = () => {
     return (
         <div style={{ maxWidth: "900px", margin: "0 auto", padding: "40px 20px", lineHeight: 1.7 }}>
             <h1 style={{ fontSize: "28px", fontWeight: 700, marginBottom: "20px", textAlign: "center" }}>
-                Thông Tin Liên Hệ – Nhạc Cụ Tiến Đạt / THADACO
+                Thông Tin Liên Hệ – Sunshine Melody / THADACO
             </h1>
 
             {/* Trụ sở Hà Nội */}

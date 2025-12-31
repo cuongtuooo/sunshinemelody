@@ -28,29 +28,28 @@ const OrderDetail = (props: IProps) => {
         }
     }, [carts]);
 
-    const handleOnChangeInput = (value: number, book: IProductTable) => {
-        if (!value || +value < 1) return;
-        if (!isNaN(+value)) {
-            //update localStorage
+    const handleOnChangeInput = (value: number, product: IProductTable) => {
+        if (!product) return;
 
-            const cartStorage = localStorage.getItem("carts");
-            if (cartStorage && book) {
-                //update
-                const carts = JSON.parse(cartStorage) as ICart[];
+        const maxQty = Number(product.quantity) || 1;
+        let newValue = Number(value);
 
-                //check exist
-                let isExistIndex = carts.findIndex(c => c._id === book?._id);
-                if (isExistIndex > -1) {
-                    carts[isExistIndex].quantity = +value;
-                }
+        if (Number.isNaN(newValue) || newValue < 1) newValue = 1;
+        if (newValue > maxQty) newValue = maxQty;
 
-                localStorage.setItem("carts", JSON.stringify(carts));
+        const cartStorage = localStorage.getItem("carts");
+        if (!cartStorage) return;
 
-                //sync React Context
-                setCarts(carts);
-            }
+        const carts = JSON.parse(cartStorage) as ICart[];
+        const idx = carts.findIndex(c => c._id === product._id);
+
+        if (idx > -1) {
+            carts[idx].quantity = newValue;
+            localStorage.setItem("carts", JSON.stringify(carts));
+            setCarts(carts);
         }
-    }
+    };
+
 
     const handleRemoveBook = (_id: string) => {
         const cartStorage = localStorage.getItem("carts");
@@ -69,8 +68,18 @@ const OrderDetail = (props: IProps) => {
             message.error("Không tồn tại sản phẩm trong giỏ hàng.")
             return;
         }
-        setCurrentStep(1)
+
+        // kiểm tra vượt tồn kho
+        for (let item of carts) {
+            if (item.quantity > item.detail.quantity) {
+                message.error(`"${item.detail.name}" chỉ còn ${item.detail.quantity} sản phẩm.`);
+                return;
+            }
+        }
+
+        setCurrentStep(1);
     }
+
 
     return (
         <div style={{ background: '#efefef', padding: "20px 0" }}>
@@ -97,9 +106,16 @@ const OrderDetail = (props: IProps) => {
                                             <div className='action'>
                                                 <div className='quantity'>
                                                     <InputNumber
+                                                        min={1}
+                                                        max={item.detail.quantity}   // 👈 Giới hạn số lượng tồn kho
                                                         onChange={(value) => handleOnChangeInput(value as number, item.detail)}
                                                         value={item.quantity}
                                                     />
+                                                    {item.quantity > item.detail.quantity && (
+                                                        <div style={{ color: "red", fontSize: 13, marginTop: 5 }}>
+                                                            Sản phẩm này chỉ còn {item.detail.quantity} sản phẩm.
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className='sum'>
                                                     Tổng:  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(currentBookPrice * (item?.quantity ?? 0))}

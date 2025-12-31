@@ -50,6 +50,11 @@ const LayoutAdmin = () => {
         //     ]
         // },
         {
+            label: <Link to='/admin/user'>Manage user</Link>,
+            key: '/admin/user',
+            icon: <ExceptionOutlined />
+        },
+        {
             label: <Link to='/admin/product'>Manage Product</Link>,
             key: '/admin/product',
             icon: <ExceptionOutlined />

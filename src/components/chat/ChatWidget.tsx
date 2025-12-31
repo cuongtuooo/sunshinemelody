@@ -19,8 +19,11 @@ const ChatWidget = () => {
     const [input, setInput] = useState("");
 
     const socketRef = useRef<any>(null);
+    const listRef = useRef<HTMLDivElement>(null);
 
-    // ============ TẠO SESSION ID ============
+    // ==========================
+    // 1. TẠO SESSION ID
+    // ==========================
     useEffect(() => {
         let sid = "";
 
@@ -37,11 +40,12 @@ const ChatWidget = () => {
         setSessionId(sid);
     }, [user?._id]);
 
-    // ============ INIT CONVERSATION ============
+    // ==========================
+    // 2. LOAD HOẶC TẠO CONVERSATION
+    // ==========================
     const initConversation = async () => {
         if (!sessionId) return;
 
-        // gửi "__init__" để backend tạo conversation
         await userSendChatAPI(
             sessionId,
             "__init__",
@@ -57,11 +61,14 @@ const ChatWidget = () => {
 
         if (convo) {
             setConversationId(convo._id);
+            localStorage.setItem(`conversation_${sessionId}`, convo._id);
             await loadMessages(convo._id);
         }
     };
 
-    // ============ LOAD MESSAGES ============
+    // ==========================
+    // 3. LOAD MESSAGES
+    // ==========================
     const loadMessages = async (cid?: string) => {
         const id = cid || conversationId;
         if (!id) return;
@@ -72,17 +79,28 @@ const ChatWidget = () => {
         setMessages(list.filter((m: any) => m.content !== "__init__"));
     };
 
-    // INIT ngay khi đã có session
+    // ==========================
+    // 4. Khi có sessionId → lấy conversationId cũ hoặc tạo mới
+    // ==========================
     useEffect(() => {
-        if (sessionId && !conversationId) initConversation();
+        if (!sessionId) return;
+
+        const saved = localStorage.getItem(`conversation_${sessionId}`);
+
+        if (saved) {
+            setConversationId(saved);
+            loadMessages(saved);
+        } else {
+            initConversation();
+        }
     }, [sessionId]);
 
-    // ============ SOCKET REAL-TIME ============
-
+    // ==========================
+    // 5. SOCKET (REAL-TIME)
+    // ==========================
     useEffect(() => {
         if (!conversationId) return;
 
-        // Chỉ tạo socket 1 lần
         if (!socketRef.current) {
             socketRef.current = io(import.meta.env.VITE_BACKEND_URL);
         }
@@ -91,17 +109,27 @@ const ChatWidget = () => {
 
         socket.on("new_message", (msg: any) => {
             if (msg.conversationId === conversationId) {
-                // real-time push
-                setMessages((prev) => [...prev, msg]);
+                setMessages((prev) => [...prev, msg]); // thêm real-time
             }
         });
 
         return () => {
-            if (socket) socket.off("new_message");
+            socket.off("new_message");
         };
     }, [conversationId]);
 
-    // USER GỬI TIN
+    // ==========================
+    // 6. TỰ CUỘN XUỐNG DÒNG CUỐI
+    // ==========================
+    useEffect(() => {
+        if (listRef.current) {
+            listRef.current.scrollTop = listRef.current.scrollHeight;
+        }
+    }, [messages, open]);
+
+    // ==========================
+    // 7. USER GỬI TIN
+    // ==========================
     const send = async () => {
         if (!input.trim()) return;
 
@@ -113,16 +141,8 @@ const ChatWidget = () => {
             user?._id
         );
 
-        setInput("");
+        setInput(""); // socket sẽ tự thêm vào UI
     };
-
-    // TỰ CUỘN XUỐNG DÒNG CUỐI
-    const listRef = useRef<any>(null);
-    useEffect(() => {
-        if (listRef.current) {
-            listRef.current.scrollTop = listRef.current.scrollHeight;
-        }
-    }, [messages]);
 
     return (
         <>
@@ -141,12 +161,15 @@ const ChatWidget = () => {
             />
 
             <Drawer
-                title="Hỗ trợ khách hàng"
+                title="Để lại số điện thoại hoặc email, yêu cầu của bạn, chúng tôi sẽ liên hệ lại bạn sớm nhất!"
                 open={open}
                 onClose={() => setOpen(false)}
                 width={360}
             >
-                <div ref={listRef} style={{ height: "70vh", overflowY: "auto" }}>
+                <div
+                    ref={listRef}
+                    style={{ height: "70vh", overflowY: "auto", paddingRight: 5 }}
+                >
                     <List
                         dataSource={messages}
                         renderItem={(item: any) => (
